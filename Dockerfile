@@ -16,4 +16,4 @@ COPY . .
 # EXPOSE <port_number>
 
 # Start the application
-CMD ["python", "mqtt_message_batching.py"]
+CMD ["python", "house_agent.py"]
