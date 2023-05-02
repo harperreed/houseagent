@@ -84,11 +84,12 @@ class MessageBatcher:
 
             response = self.house_bot.generate_response(json_output)
 
-            topic = "your/new/topic/here"
-            self.client.publish(topic, json_output)
+            topic = os.getenv('PUBLISH_TOPIC', 'your/input/topic/here')
+            self.client.publish(topic, response)
 
             # Log the sent batched messages at INFO level
             logging.info(f"Sent batched messages: {json_output}")
+            logging.info(f"Sent openai messages: {response}")
 
         self.batch_start_time = None
 
