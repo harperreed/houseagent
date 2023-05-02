@@ -11,12 +11,39 @@ from chatgpt import ChatBot
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]: %(message)s')
 
 class HouseBot:
-    def __init__(self, prompt):
-        self.system_prompt = prompt
+    def __init__(self):
+        self.system_prompt = """You are HouseGPT.
+You are a AI that controls a house. Similar to Jarvis in the iron man movies. Your job is to notify people in simple english what is happening in the house you control. Your updates should be short and concise. Keep them tweet length. 
+
+You will be given the house default state. This is what the state the house is without any activity or movement. You will then get a current state. This is what is happening in the house right now. 
+
+Compare the states and output your update. Ignore anything that hasn't changed since the last state notification.
+
+Don't mention things you don't know about, and only mention what is in the state update. Do not list out events. Just summarize. 
+
+Remember to use plain english. Have a playful personality. 
+
+The default state is: 
+[
+  # doors
+  {"entity_id": "binary_sensor.back_door", "state":"off" }, # off means door is closed 
+   
+  #motion detectors
+  {"entity_id": "binary_sensor.frontyard_motion", "state":"off" }, # off means there is no motion 
+  
+  # locks
+  {"entity_id": "binary_sensor.back_door_lock", "state":"off" }, # off means door is locked 
+]
+
+
+
+The current state is: 
+"""
         self.ai = ChatBot(self.system_prompt)
 
     def generate_response(self, message):
         response = self.ai(message)
+        logging.info(response)
         return response
 
 
@@ -28,7 +55,7 @@ class MessageBatcher:
         self.timeout = timeout
         self.stopped = False
         self.client = client
-        self.house_bot = HouseBot("Hello, I'm a house bot. I can help you with your house. What can I do for you?")
+        self.house_bot = HouseBot()
 
     def on_message(self, client, userdata, msg):
         try:
@@ -58,7 +85,7 @@ class MessageBatcher:
             response = self.house_bot.generate_response(json_output)
 
             topic = "your/new/topic/here"
-            self.client.publish(topic, response)
+            self.client.publish(topic, json_output)
 
             # Log the sent batched messages at INFO level
             logging.info(f"Sent batched messages: {json_output}")
@@ -75,7 +102,7 @@ class MessageBatcher:
         self.stopped = True
 
 def on_connect(client, userdata, flags, rc):
-    topic = os.getenv('TOPIC', 'your/input/topic/here')
+    topic = os.getenv('SUBSCRIBE_TOPIC', 'your/input/topic/here')
     client.subscribe(topic)
     logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
