@@ -5,9 +5,20 @@ from queue import Queue, Empty
 import paho.mqtt.client as mqtt
 from threading import Thread
 import logging
+from chatgpt import ChatBot
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]: %(message)s')
+
+class HouseBot:
+    def __init__(self, prompt):
+        self.system_prompt = prompt
+        self.ai = ChatBot(self.system_prompt)
+
+    def generate_response(self, message):
+        response = self.ai(message)
+        return response
+
 
 class MessageBatcher:
     def __init__(self, client, timeout):
@@ -17,6 +28,7 @@ class MessageBatcher:
         self.timeout = timeout
         self.stopped = False
         self.client = client
+        self.house_bot = HouseBot("Hello, I'm a house bot. I can help you with your house. What can I do for you?")
 
     def on_message(self, client, userdata, msg):
         try:
@@ -43,8 +55,10 @@ class MessageBatcher:
             output = {'Messages': batch}
             json_output = json.dumps(output)
 
+            response = self.house_bot.generate_response(json_output)
+
             topic = "your/new/topic/here"
-            self.client.publish(topic, json_output)
+            self.client.publish(topic, response)
 
             # Log the sent batched messages at INFO level
             logging.info(f"Sent batched messages: {json_output}")
