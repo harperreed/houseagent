@@ -1,0 +1,10 @@
+version: "2"
+services:
+  house-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: house-agent
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env
