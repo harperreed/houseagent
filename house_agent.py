@@ -7,8 +7,23 @@ from threading import Thread
 import logging
 from chatgpt import ChatBot
 
+# Load configuration from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
+
 # Set up basic logging configuration
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]: %(message)s')
+log_format = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
+
+logging.basicConfig(level=logging.DEBUG, format=log_format)
+
+# Create a FileHandler and set its level to INFO
+file_handler = logging.FileHandler(os.getenv('LOGFILE', 'bot.log'))
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter(log_format))
+
+# Add the FileHandler to the root logger
+logging.getLogger('').addHandler(file_handler)
 
 class HouseBot:
     def __init__(self):
@@ -26,6 +41,8 @@ class HouseBot:
 
 class MessageBatcher:
     def __init__(self, client, timeout):
+
+        self.logger = logging.getLogger(__name__)
         self.message_queue = Queue()
         self.last_received_timestamp = None
         self.batch_start_time = None
@@ -37,8 +54,9 @@ class MessageBatcher:
     def on_message(self, client, userdata, msg):
         try:
             message = json.loads(msg.payload)
+            self.logger.debug(f"Received message: {message}")
         except json.JSONDecodeError:
-            logging.error(f"Error decoding JSON: {msg.payload}")
+            self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
 
         self.last_received_timestamp = time.time()
@@ -56,7 +74,7 @@ class MessageBatcher:
                 break
 
         if batch:
-            output = {'Messages': batch}
+            output = {'messages': batch}
             json_output = json.dumps(output)
 
             response = self.house_bot.generate_response(json_output)
@@ -65,8 +83,8 @@ class MessageBatcher:
             self.client.publish(topic, response)
 
             # Log the sent batched messages at INFO level
-            logging.info(f"Sent batched messages: {json_output}")
-            logging.info(f"Sent openai messages: {response}")
+            self.logger.info(f"Sent batched messages: {json_output}")
+            self.logger.info(f"Sent openai messages: {response}")
 
         self.batch_start_time = None
 
@@ -87,9 +105,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     message_batcher.on_message(client, userdata, msg)
 
-# Load configuration from .env file
-from dotenv import load_dotenv
-load_dotenv()
 
 timeout = int(os.getenv('TIMEOUT', 60))
 
