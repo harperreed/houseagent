@@ -16,6 +16,7 @@ load_dotenv()
 log_format = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
 
 logging.basicConfig(level=logging.DEBUG, format=log_format)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 # Create a FileHandler and set its level to INFO
 file_handler = logging.FileHandler(os.getenv('LOGFILE', 'bot.log'))
@@ -33,8 +34,14 @@ class HouseBot:
 
         self.ai = ChatBot(self.system_prompt)
 
-    def generate_response(self, message):
-        response = self.ai(message)
+    def generate_response(self, current_state, last_state):
+
+        prompt = f"""# The current state is: 
+        {current_state}
+
+        # The previous state was: 
+        {last_state}"""
+        response = self.ai(prompt)
         logging.info(response)
         return response
 
@@ -50,6 +57,7 @@ class MessageBatcher:
         self.stopped = False
         self.client = client
         self.house_bot = HouseBot()
+        self.last_batch_messages = None
 
     def on_message(self, client, userdata, msg):
         try:
@@ -76,8 +84,10 @@ class MessageBatcher:
         if batch:
             output = {'messages': batch}
             json_output = json.dumps(output)
+            
 
-            response = self.house_bot.generate_response(json_output)
+            response = self.house_bot.generate_response(json_output, self.last_batch_messages)
+            self.last_batch_messages = json_output
 
             topic = os.getenv('PUBLISH_TOPIC', 'your/input/topic/here')
             self.client.publish(topic, response)

@@ -16,7 +16,11 @@ class ChatBot:
         self.system = system
         self.messages = []
         self.total_tokens = 0
-        self.price_cpm = 0.002
+        self.price_cpm = {
+            'gpt-3.5-turbo': 0.002,
+            'gpt-4': 0.06,
+        }
+        self.model = os.getenv("OPENAI_MODEL")
 
         if self.system:
             self.messages.append({"role": "system", "content": system})
@@ -26,7 +30,7 @@ class ChatBot:
         self.logger.debug(usage)
         self.total_tokens += usage["total_tokens"]
         self.logger.debug(f"Total tokens used: {self.total_tokens}")
-        self.logger.debug(f"Cost: {(self.total_tokens/1000)*self.price_cpm}")
+        self.logger.debug(f"Cost: {(self.total_tokens/1000)*self.price_cpm[self.model]}")
         return self.total_tokens
     
     def __call__(self, message):

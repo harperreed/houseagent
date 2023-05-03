@@ -55,5 +55,3 @@ The default state is:
   {"entity_id": "sensor.living_room_detected_object", "state":"unknown" },
   {"entity_id": "sensor.front_yard_detected_object", "state":"unknown" }
 ]
-
-The current state is: 
