@@ -1,3 +1,4 @@
 paho-mqtt
 python-dotenv
 openai
+langchain

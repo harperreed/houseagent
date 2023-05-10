@@ -54,7 +54,7 @@ class AgentListener:
         self.stopped = True
 
 def on_connect(client, userdata, flags, rc):
-    topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
+    topic = os.getenv('SUBSCRIBE_TOPIC', 'your/input/topic/here')
     client.subscribe(topic)
     logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
