@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 
 # from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
@@ -37,7 +38,9 @@ class HouseBot:
         self.system_message_prompt = SystemMessagePromptTemplate.from_template(system_prompt_template)
         self.human_message_prompt = HumanMessagePromptTemplate.from_template(human_prompt_template)
 
-        self.chat = ChatOpenAI(temperature=0)
+        openai_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+        openai_temperature = os.getenv("OPENAI_TEMPERATURE", "0")
+        self.chat = ChatOpenAI(temperature=openai_temperature, model=openai_model)
 
     def generate_response(self, current_state, last_state):
         self.logger.debug("let's make a request")
