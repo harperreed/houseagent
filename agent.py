@@ -1,20 +1,16 @@
 import os
 import time
 import json
-from queue import Queue, Empty
 import paho.mqtt.client as mqtt
-from threading import Thread
 import logging
+from dotenv import load_dotenv
 from chatgpt import ChatBot
 
 # Load configuration from .env file
-from dotenv import load_dotenv
 load_dotenv()
-
 
 # Set up basic logging configuration
 log_format = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
-
 logging.basicConfig(level=logging.DEBUG, format=log_format)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -26,32 +22,32 @@ file_handler.setFormatter(logging.Formatter(log_format))
 # Add the FileHandler to the root logger
 logging.getLogger('').addHandler(file_handler)
 
+
 class HouseBot:
     def __init__(self):
         with open('housebot_prompt.txt', 'r') as f:
             prompt = f.read()
-        self.system_prompt = prompt 
-
+        self.system_prompt = prompt
         self.ai = ChatBot(self.system_prompt)
 
     def generate_response(self, current_state, last_state):
+        prompt = f"""# The current state is:
+{current_state}
 
-        prompt = f"""# The current state is: 
-        {current_state}
-
-        # The previous state was: 
-        {last_state}"""
+# The previous state was:
+{last_state}"""
         response = self.ai(prompt)
         logging.info(response)
         return response
 
+
 class AgentListener:
     def __init__(self, client, timeout):
-
         self.logger = logging.getLogger(__name__)
         self.stopped = False
         self.client = client
         self.house_bot = HouseBot()
+        self.last_batch_messages = None
 
     def on_message(self, client, userdata, msg):
         try:
@@ -60,16 +56,15 @@ class AgentListener:
         except json.JSONDecodeError:
             self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
-        
+
         output = {'messages': message}
-        json_output = json.dumps(output)
-        
         json_output = json.dumps(output)
 
         # Log the sent batched messages at INFO level
         self.logger.info(f"Sent batched messages: {json_output}")
 
         response = self.house_bot.generate_response(json_output, self.last_batch_messages)
+        self.last_batch_messages = json_output
 
         topic = os.getenv('NOTIFICATION_TOPIC', 'your/input/topic/here')
         self.client.publish(topic, response)
@@ -77,20 +72,21 @@ class AgentListener:
     def stop(self):
         self.stopped = True
 
-def on_connect(client, userdata, flags, rc):
-    topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
-    client.subscribe(topic)
-    logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
+    def run(self):
+        while not self.stopped:
+            time.sleep(1)
 
-def on_message(client, userdata, msg):
-    message_batcher.on_message(client, userdata, msg)
+    def on_connect(client, userdata, flags, rc):
+        topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
+        client.subscribe(topic)
+        logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
 
 timeout = int(os.getenv('TIMEOUT', 60))
 
 client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
+client.on_connect = AgentListener.on_connect
+client.on_message = AgentListener.on_message
 
 broker_address = os.getenv('MQTT_BROKER_ADDRESS', 'localhost')
 port_number = int(os.getenv('MQTT_PORT', 1883))
@@ -102,6 +98,13 @@ logging.debug(f"Connected to MQTT broker at {broker_address}:{port_number}")
 message_batcher = AgentListener(client, timeout)
 
 client.loop_start()
+
+try:
+    message_batcher.run()
+except KeyboardInterrupt:
+    logging.info("Shutting down...")
+    message_batcher.stop()
+
 client.loop_stop()
 client.disconnect()
 
