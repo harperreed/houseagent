@@ -33,7 +33,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     message_batcher.on_message(client, userdata, msg)
 
-
 timeout = int(os.getenv('TIMEOUT', 60))
 
 client = mqtt.Client()
