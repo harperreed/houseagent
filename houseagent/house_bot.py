@@ -21,12 +21,17 @@ from langchain.schema import (
 class HouseBot:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        with open('housebot_system_prompt.txt', 'r') as f:
-            system_prompt_template = f.read()
-        with open('housebot_human_prompt.txt', 'r') as f:
-            human_prompt_template = f.read()
+        prompt_dir = 'prompts'
 
-        with open('default_state.json', 'r') as f:
+        human_primpt_filename = 'housebot_human.txt'
+        system_prompt_filename = 'housebot_system.txt'
+        default_state_filename = 'default_state.json'
+
+        with open(f'{prompt_dir}/{system_prompt_filename}', 'r') as f:
+            system_prompt_template = f.read()
+        with open(f'{prompt_dir}/{human_primpt_filename}', 'r') as f:
+            human_prompt_template = f.read()
+        with open(f'{prompt_dir}/{default_state_filename}', 'r') as f:
             self.default_state = f.read()
 
         self.system_message_prompt = SystemMessagePromptTemplate.from_template(system_prompt_template)
