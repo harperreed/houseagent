@@ -9,6 +9,7 @@ services:
     volumes:
       - ./.env:/app/.env
       - ./housebot_prompt.txt:/app/housebot_prompt.txt
+      - ./house_agent.log:/app/house_agent.log
   sensor-collector:
     build:
       context: .
@@ -17,3 +18,4 @@ services:
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
+      - ./house_agent.log:/app/house_collector.log

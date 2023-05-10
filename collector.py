@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG, format=log_format)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 # Create a FileHandler and set its level to INFO
-file_handler = logging.FileHandler(os.getenv('LOGFILE', 'bot.log'))
+file_handler = logging.FileHandler(os.getenv('COLLECTOR_LOGFILE', 'collector.log'))
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter(log_format))
 
