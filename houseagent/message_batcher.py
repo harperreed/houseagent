@@ -2,6 +2,7 @@ import time
 import json
 from queue import Queue, Empty
 import logging
+import os
 
 
 class MessageBatcher:
