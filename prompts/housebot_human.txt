@@ -1,0 +1,5 @@
+# The current state is:
+{current_state}
+
+# The previous state was:
+{last_state}
