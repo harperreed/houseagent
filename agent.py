@@ -1,10 +1,10 @@
 import os
-import time
 import json
 import paho.mqtt.client as mqtt
 import logging
 from dotenv import load_dotenv
-from chatgpt import ChatBot
+import time
+from house_bot import HouseBot
 
 # Load configuration from .env file
 load_dotenv()
@@ -21,25 +21,6 @@ file_handler.setFormatter(logging.Formatter(log_format))
 
 # Add the FileHandler to the root logger
 logging.getLogger('').addHandler(file_handler)
-
-
-class HouseBot:
-    def __init__(self):
-        with open('housebot_prompt.txt', 'r') as f:
-            prompt = f.read()
-        self.system_prompt = prompt
-        self.ai = ChatBot(self.system_prompt)
-
-    def generate_response(self, current_state, last_state):
-        prompt = f"""# The current state is:
-{current_state}
-
-# The previous state was:
-{last_state}"""
-        response = self.ai(prompt)
-        logging.info(response)
-        return response
-
 
 class AgentListener:
     def __init__(self, client, timeout):
@@ -72,21 +53,20 @@ class AgentListener:
     def stop(self):
         self.stopped = True
 
-    def run(self):
-        while not self.stopped:
-            time.sleep(1)
+def on_connect(client, userdata, flags, rc):
+    topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
+    client.subscribe(topic)
+    logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
-    def on_connect(client, userdata, flags, rc):
-        topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
-        client.subscribe(topic)
-        logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
-
+def on_message(client, userdata, msg):
+    agent_client.on_message(client, userdata, msg)
 
 timeout = int(os.getenv('TIMEOUT', 60))
 
 client = mqtt.Client()
-client.on_connect = AgentListener.on_connect
-client.on_message = AgentListener.on_message
+
+client.on_connect = on_connect
+client.on_message = on_message
 
 broker_address = os.getenv('MQTT_BROKER_ADDRESS', 'localhost')
 port_number = int(os.getenv('MQTT_PORT', 1883))
@@ -95,17 +75,16 @@ keep_alive_interval = int(os.getenv('MQTT_KEEP_ALIVE_INTERVAL', 60))
 client.connect(broker_address, port_number, keep_alive_interval)
 logging.debug(f"Connected to MQTT broker at {broker_address}:{port_number}")
 
-message_batcher = AgentListener(client, timeout)
+agent_client = AgentListener(client, timeout)
 
 client.loop_start()
 
 try:
-    message_batcher.run()
+    while not agent_client.stopped:
+        time.sleep(1)
 except KeyboardInterrupt:
     logging.info("Shutting down...")
-    message_batcher.stop()
+    agent_client.stop()
 
 client.loop_stop()
-client.disconnect()
-
-logging.info("Bye!")
+client.disconnect
