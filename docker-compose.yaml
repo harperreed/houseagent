@@ -3,9 +3,17 @@ services:
   house-agent:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.agent
     container_name: house-agent
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
       - ./housebot_prompt.txt:/app/housebot_prompt.txt
+  sensor-collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.collector
+    container_name: sensor-collector
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env

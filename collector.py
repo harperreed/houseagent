@@ -26,26 +26,6 @@ file_handler.setFormatter(logging.Formatter(log_format))
 # Add the FileHandler to the root logger
 logging.getLogger('').addHandler(file_handler)
 
-class HouseBot:
-    def __init__(self):
-        with open('housebot_prompt.txt', 'r') as f:
-            prompt = f.read()
-        self.system_prompt = prompt 
-
-        self.ai = ChatBot(self.system_prompt)
-
-    def generate_response(self, current_state, last_state):
-
-        prompt = f"""# The current state is: 
-        {current_state}
-
-        # The previous state was: 
-        {last_state}"""
-        response = self.ai(prompt)
-        logging.info(response)
-        return response
-
-
 class MessageBatcher:
     def __init__(self, client, timeout):
 
@@ -56,7 +36,6 @@ class MessageBatcher:
         self.timeout = timeout
         self.stopped = False
         self.client = client
-        self.house_bot = HouseBot()
         self.last_batch_messages = None
 
     def on_message(self, client, userdata, msg):
@@ -86,15 +65,15 @@ class MessageBatcher:
             json_output = json.dumps(output)
             
 
-            response = self.house_bot.generate_response(json_output, self.last_batch_messages)
+            # response = self.house_bot.generate_response(json_output, self.last_batch_messages)
             self.last_batch_messages = json_output
 
-            topic = os.getenv('PUBLISH_TOPIC', 'your/input/topic/here')
-            self.client.publish(topic, response)
+            topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
+            self.client.publish(topic, json.dumps(json_output))
 
             # Log the sent batched messages at INFO level
             self.logger.info(f"Sent batched messages: {json_output}")
-            self.logger.info(f"Sent openai messages: {response}")
+            # self.logger.info(f"Sent openai messages: {response}")
 
         self.batch_start_time = None
 
