@@ -15,6 +15,7 @@ class MessageBatcher:
         self.batch_start_time = 0
         self.timeout = timeout
         self.stopped = False
+        self.debug = os.getenv("DEBUG", False)
         self.client = client
         self.last_batch_messages = None
 
@@ -64,7 +65,7 @@ class MessageBatcher:
     def run(self):
         debug = False
         while not self.stopped:
-            if debug:
+            if self.debug:
                 self.logger.debug("Checking for messages")
                 self.logger.debug(f"Queue size: {self.message_queue.qsize()}")
                 self.logger.debug(f"Batch start time: {self.batch_start_time}")
@@ -79,7 +80,7 @@ class MessageBatcher:
             ):
                 self.logger.debug("Timeout reached")
                 self.send_batched_messages()
-            if debug:
+            if self.debug:
                 self.logger.debug("Sleeping for 0.1 seconds")
             time.sleep(0.1)
 
