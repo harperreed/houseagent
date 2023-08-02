@@ -4,6 +4,7 @@ import paho.mqtt.client as mqtt
 import logging
 from dotenv import load_dotenv
 import time
+import structlog
 
 from houseagent.agent_listener import AgentListener
 
@@ -11,30 +12,31 @@ from houseagent.agent_listener import AgentListener
 load_dotenv()
 
 # Set up basic logging configuration
-log_format = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=log_format)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-# Create a FileHandler and set its level to INFO
-file_handler = logging.FileHandler(os.getenv('AGENT_LOGFILE', 'bot.log'))
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter(log_format))
-
-# Add the FileHandler to the root logger
-logging.getLogger('').addHandler(file_handler)
+logger = structlog.get_logger(__name__)
 
 def on_connect(client, userdata, flags, rc):
+    logger.info("Connected to MQTT broker")
     topic = os.getenv('MESSAGE_BUNDLE_TOPIC', 'your/input/topic/here')
+    logger.debug(f"Subscribing to topic: {topic}")
     client.subscribe(topic)
-    logging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
+    logger.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
 def on_message(client, userdata, msg):
+    logger.info("Received message")
+    logger.debug(f"Message: {msg.payload}")
     agent_client.on_message(client, userdata, msg)
+
+def on_disconnect(client, userdata, rc):
+    logger.info("Disconnected from MQTT broker")
+    if rc != 0:
+        logger.error(f"Unexpected disconnection. Result code: {rc}")
+  
 
 client = mqtt.Client()
 
 client.on_connect = on_connect
 client.on_message = on_message
+client.on_disconnect = on_disconnect
 
 broker_address = os.getenv('MQTT_BROKER_ADDRESS', 'localhost')
 port_number = int(os.getenv('MQTT_PORT', 1883))

@@ -1,12 +1,12 @@
 import os
 import logging
-from dotenv import load_dotenv
+import structlog
 from houseagent.house_bot import HouseBot
 import json
 
 class AgentListener:
     def __init__(self, client):
-        self.logger = logging.getLogger(__name__)
+        self.logger = structlog.getLogger(__name__)
         self.stopped = False
         self.client = client
         self.house_bot = HouseBot()
