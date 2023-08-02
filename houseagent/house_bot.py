@@ -1,4 +1,5 @@
 import logging
+import structlog
 import json
 import os
 import re
@@ -23,7 +24,7 @@ from langchain.schema import (
 
 class HouseBot:
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = structlog.getLogger(__name__)
         prompt_dir = 'prompts'
 
         human_primpt_filename = 'housebot_human.txt'

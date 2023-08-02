@@ -12,39 +12,7 @@ from houseagent.agent_listener import AgentListener
 load_dotenv()
 
 # Set up basic logging configuration
-# Create a console handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-# Create a root logger
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-root_logger.addHandler(console_handler)
-
-# Define a processor function
-def processor(_, __, event_dict):
-    event_dict['message'] = event_dict.get('event')
-    return event_dict
-
-# Configure structlog to interoperate with logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        processor,
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.dev.ConsoleRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 def on_connect(client, userdata, flags, rc):
     logger.info("Connected to MQTT broker")

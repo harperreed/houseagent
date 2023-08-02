@@ -1,5 +1,5 @@
 import os
-
+from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 import logging
 import structlog
@@ -10,44 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# Set up basic logging configuration
-log_format = '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
-
-logging.basicConfig(level=logging.DEBUG, format=log_format)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-# Create a FileHandler and set its level to INFO
-file_handler = logging.FileHandler(os.getenv('COLLECTOR_LOGFILE', 'collector.log'))
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter(log_format))
-
-# Add the FileHandler to the root logger
-logging.getLogger('').addHandler(file_handler)
-
-# Define a processor function
-def processor(_, __, event_dict):
-    event_dict['message'] = event_dict.get('event')
-    return event_dict
-
-# Configure structlog to interoperate with logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        processor,
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.dev.ConsoleRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 def on_connect(client, userdata, flags, rc):
     topic = os.getenv('SUBSCRIBE_TOPIC', 'your/input/topic/here')
