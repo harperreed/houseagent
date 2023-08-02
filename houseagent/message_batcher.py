@@ -70,7 +70,8 @@ class MessageBatcher:
                 self.logger.debug(f"Queue size: {self.message_queue.qsize()}")
                 self.logger.debug(f"Batch start time: {self.batch_start_time}")
                 self.logger.debug(f"Last received timestamp: {self.last_received_timestamp}")
-                self.logger.debug(f"Timeout remainder: {(time.time() - float(self.batch_start_time))}")
+                if self.batch_start_time:
+                    self.logger.debug(f"Timeout remainder: {(time.time() - float(self.batch_start_time))}")
                 self.logger.debug(f"Last message received: {(time.time() - float(self.last_received_timestamp))}")
                 self.logger.debug(f"timeout: {self.timeout}")
 
