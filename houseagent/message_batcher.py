@@ -2,12 +2,13 @@ import time
 import json
 from queue import Queue, Empty
 import logging
+import structlog
 import os
 
 
 class MessageBatcher:
     def __init__(self, client, timeout):
-        self.logger = logging.getLogger(__name__)
+        self.logger = structlog.getLogger(__name__)
         self.message_queue = Queue()
         self.last_received_timestamp = None
         self.batch_start_time = None
