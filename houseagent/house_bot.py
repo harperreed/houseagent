@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+import re
 
 from langchain.chat_models import ChatOpenAI
 
@@ -44,6 +45,10 @@ class HouseBot:
 
         self.chat = ChatOpenAI(model_name=openai_model, temperature=openai_temperature)
 
+    def strip_emojis(self, text):
+        RE_EMOJI = re.compile('[\U00010000-\U0010ffff]', flags=re.UNICODE)
+        return RE_EMOJI.sub(r'', text)
+
     def generate_response(self, current_state, last_state):
         self.logger.debug("let's make a request")
 
@@ -54,5 +59,8 @@ class HouseBot:
 
         self.logger.debug(f"let's make a request: {result}")
         # print(result.llm_output)
-        
+
+        #strip emoji
+        result = self.strip_emojis(result)
+    
         return result
