@@ -40,7 +40,7 @@ client.on_disconnect = on_disconnect
 
 broker_address = os.getenv('MQTT_BROKER_ADDRESS', 'localhost')
 port_number = int(os.getenv('MQTT_PORT', 1883))
-keep_alive_interval = int(os.getenv('MQTT_KEEP_ALIVE_INTERVAL', 120))
+keep_alive_interval = int(os.getenv('MQTT_KEEP_ALIVE_INTERVAL', 60))
 
 client.connect(broker_address, port_number, keep_alive_interval)
 logging.debug(f"Connected to MQTT broker at {broker_address}:{port_number}")
