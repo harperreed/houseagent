@@ -52,7 +52,7 @@ logger = structlog.get_logger()
 def on_connect(client, userdata, flags, rc):
     topic = os.getenv('SUBSCRIBE_TOPIC', 'your/input/topic/here')
     client.subscribe(topic)
-    logloggerging.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
+    logger.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
 
 def on_message(client, userdata, msg):
     message_batcher.on_message(client, userdata, msg)
