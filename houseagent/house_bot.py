@@ -4,8 +4,8 @@ import json
 import os
 import re
 
-from langchain.chat_models import ChatOpenAI
-
+# from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 from langchain import PromptTemplate, LLMChain
 
@@ -63,5 +63,5 @@ class HouseBot:
 
         #strip emoji
         result = self.strip_emojis(result)
-    
+
         return result

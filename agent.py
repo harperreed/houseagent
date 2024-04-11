@@ -32,7 +32,7 @@ def on_disconnect(client, userdata, rc):
         logger.error(f"Unexpected disconnection. Result code: {rc}")
 
 
-client = mqtt.Client(callback_api_version=2)
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, "agent")
 
 client.on_connect = on_connect
 client.on_message = on_message

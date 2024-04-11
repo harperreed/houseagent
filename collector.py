@@ -29,7 +29,7 @@ def on_disconnect(client, userdata, rc):
 
 timeout = int(os.getenv('TIMEOUT', 60))
 
-client = mqtt.Client(callback_api_version=2)
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, "housebot")
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_disconnect = on_disconnect
