@@ -30,9 +30,9 @@ def on_disconnect(client, userdata, rc):
     logger.info("Disconnected from MQTT broker")
     if rc != 0:
         logger.error(f"Unexpected disconnection. Result code: {rc}")
-  
 
-client = mqtt.Client()
+
+client = mqtt.Client(callback_api_version=2)
 
 client.on_connect = on_connect
 client.on_message = on_message

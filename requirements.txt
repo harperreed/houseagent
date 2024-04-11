@@ -3,3 +3,4 @@ python-dotenv
 openai
 langchain
 structlog
+langchain-community
