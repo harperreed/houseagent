@@ -4,6 +4,7 @@ import paho.mqtt.client as mqtt
 import logging
 import structlog
 from houseagent.message_batcher import MessageBatcher
+import json
 
 # Load configuration from .env file
 load_dotenv()
@@ -19,8 +20,12 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     logger.info("Received message")
-    logger.debug(f"Message: {msg.payload}")
-    message_batcher.on_message(client, userdata, msg)
+    try:
+        payload = json.loads(msg.payload)
+        logger.debug(f"Message: {payload}")
+        message_batcher.on_message(client, userdata, msg)
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON payload. Message rejected.")
 
 def on_disconnect(client, userdata, rc):
     logger.info("Disconnected from MQTT broker")
