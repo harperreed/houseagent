@@ -4,3 +4,4 @@ openai
 langchain
 structlog
 langchain-community
+pytest

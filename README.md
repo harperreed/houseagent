@@ -57,3 +57,25 @@ HouseBot monitors the specified MQTT topic for house state updates. When an upda
 You can modify the `system_prompt` in the `HouseBot` class to change the AI's behavior or provide additional context. You can also adjust the `timeout` variable in the `.env` file to change the interval between message batches.
 
 Remember to replace `your/input/topic/here` with the appropriate MQTT topics for your specific use case.
+
+## Running Tests
+
+To run the unit tests for HouseAgent:
+
+1. Ensure you have installed the dependencies, including pytest
+2. Navigate to the project root directory
+3. Run the following command:
+
+   ```
+   pytest
+   ```
+
+This will discover and run all the tests in the `tests/` directory.
+
+To generate a coverage report, run:
+
+```
+pytest --cov=houseagent tests/
+```
+
+This will show the test coverage for each file in the `houseagent/` directory.
