@@ -1,23 +1,35 @@
-# syntax=docker/dockerfile:1.9
-FROM ubuntu:noble AS build
+# ABOUTME: Multistage Dockerfile for HouseAgent MQTT agent service
+# ABOUTME: Uses UV for fast dependency installation and minimal production image
+
+# Stage 1: Build dependencies
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 WORKDIR /app
 
-# The following does not work in Podman unless you build in Docker
-# compatibility mode: <https://github.com/containers/podman/issues/8477>
-# You can manually prepend every RUN script with `set -ex` too.
-SHELL ["sh", "-exc"]
+# Copy dependency files first for better layer caching
+COPY pyproject.toml uv.lock ./
 
-# Security-conscious organizations should package/review uv themselves.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Install dependencies to a virtual environment using lockfile
+RUN uv sync --frozen --no-cache --no-dev
 
-# Copy the application code
-COPY . .
+# Stage 2: Production runtime
+FROM debian:bookworm-slim
 
-# set up a virtual env to use for whatever app is destined for this container.
-RUN uv venv --python 3.12.5 /venv
-#RUN uv venv
-#RUN uv pip install -r requirements.txt
+# Install uv for runtime
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# Start the application
+WORKDIR /app
+
+# Copy virtual environment from builder stage
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy application code and prompts
+COPY houseagent ./houseagent
+COPY agent.py ./
+COPY prompts ./prompts
+
+# Ensure we use the virtual environment
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run the agent
 CMD ["uv", "run", "agent.py"]

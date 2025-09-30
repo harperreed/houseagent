@@ -1,0 +1,45 @@
+# ABOUTME: Docker ignore file to exclude unnecessary files from build context
+# ABOUTME: Reduces build context size and improves build performance
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Documentation
+*.md
+LICENSE
+
+# Logs
+*.log
+
+# Pre-commit
+.pre-commit-config.yaml
