@@ -9,6 +9,9 @@ WORKDIR /app
 # Copy dependency files first for better layer caching
 COPY pyproject.toml uv.lock ./
 
+# Copy source code (needed for uv sync to install the package)
+COPY houseagent ./houseagent
+
 # Install dependencies to a virtual environment using lockfile
 RUN uv sync --frozen --no-cache --no-dev
 
