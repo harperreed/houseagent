@@ -1,3 +1,5 @@
 .env
 *.pyc
 chroma_data/
+code-review.md
+output.txt

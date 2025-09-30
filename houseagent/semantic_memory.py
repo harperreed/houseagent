@@ -40,11 +40,15 @@ class SemanticMemory:
 
     def _get_embedding(self, text: str) -> List[float]:
         """Get OpenAI embedding for text"""
-        response = self.openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=text,
-        )
-        return response.data[0].embedding
+        try:
+            response = self.openai_client.embeddings.create(
+                model="text-embedding-3-small",
+                input=text,
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            self.logger.error(f"Failed to get embedding: {e}")
+            raise
 
     def _naturalize_message(self, message: Dict) -> str:
         """Convert message dict to natural language string"""
@@ -89,40 +93,44 @@ class SemanticMemory:
         message_id: Optional[str] = None,
     ):
         """Add a message to semantic memory with timestamp"""
-        now = datetime.now()
-        timestamp_unix = now.timestamp()  # Unix timestamp for ChromaDB filtering
-        timestamp_iso = now.isoformat()  # ISO string for display
+        try:
+            now = datetime.now()
+            timestamp_unix = now.timestamp()  # Unix timestamp for ChromaDB filtering
+            timestamp_iso = now.isoformat()  # ISO string for display
 
-        # Convert to natural language
-        natural_text = self._naturalize_message(message)
+            # Convert to natural language
+            natural_text = self._naturalize_message(message)
 
-        # Get embedding
-        embedding = self._get_embedding(natural_text)
+            # Get embedding (may raise exception)
+            embedding = self._get_embedding(natural_text)
 
-        # Generate ID if not provided
-        if message_id is None:
-            message_id = f"{role}_{timestamp_iso}"
+            # Generate unique ID if not provided (use timestamp + microseconds)
+            if message_id is None:
+                message_id = f"{role}_{int(timestamp_unix * 1000000)}"
 
-        # Store in ChromaDB (timestamp as float for filtering)
-        self.collection.add(
-            embeddings=[embedding],
-            documents=[natural_text],
-            ids=[message_id],
-            metadatas=[
-                {
-                    "timestamp": timestamp_unix,  # Store as Unix timestamp
-                    "timestamp_iso": timestamp_iso,  # Also store ISO for display
-                    "role": role,
-                    "raw_message": str(message),
-                }
-            ],
-        )
+            # Store in ChromaDB (timestamp as float for filtering)
+            self.collection.add(
+                embeddings=[embedding],
+                documents=[natural_text],
+                ids=[message_id],
+                metadatas=[
+                    {
+                        "timestamp": timestamp_unix,  # Store as Unix timestamp
+                        "timestamp_iso": timestamp_iso,  # Also store ISO for display
+                        "role": role,
+                        "raw_message": str(message),
+                    }
+                ],
+            )
 
-        self.logger.debug(
-            f"Added {role} message to semantic memory",
-            message_id=message_id,
-            text_preview=natural_text[:100],
-        )
+            self.logger.debug(
+                f"Added {role} message to semantic memory",
+                message_id=message_id,
+                text_preview=natural_text[:100],
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to add message to semantic memory: {e}")
+            # Don't re-raise - semantic memory is optional, shouldn't crash the agent
 
     def search(
         self,
@@ -139,46 +147,50 @@ class SemanticMemory:
             time_window_hours: Hours to look back (default: use instance default)
 
         Returns:
-            List of matching messages with metadata
+            List of matching messages with metadata (empty list on error)
         """
-        if time_window_hours is None:
-            time_window_hours = self.time_window_hours
+        try:
+            if time_window_hours is None:
+                time_window_hours = self.time_window_hours
 
-        # Calculate time cutoff (Unix timestamp)
-        cutoff_time = datetime.now() - timedelta(hours=time_window_hours)
-        cutoff_unix = cutoff_time.timestamp()
+            # Calculate time cutoff (Unix timestamp)
+            cutoff_time = datetime.now() - timedelta(hours=time_window_hours)
+            cutoff_unix = cutoff_time.timestamp()
 
-        # Get query embedding
-        query_embedding = self._get_embedding(query)
+            # Get query embedding (may raise exception)
+            query_embedding = self._get_embedding(query)
 
-        # Search with time filter (using Unix timestamp)
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results,
-            where={"timestamp": {"$gte": cutoff_unix}},
-        )
+            # Search with time filter (using Unix timestamp)
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results,
+                where={"timestamp": {"$gte": cutoff_unix}},
+            )
 
-        # Format results
-        formatted_results = []
-        if results["documents"] and len(results["documents"][0]) > 0:
-            for i, doc in enumerate(results["documents"][0]):
-                formatted_results.append(
-                    {
-                        "content": doc,
-                        "metadata": results["metadatas"][0][i],
-                        "distance": results["distances"][0][i]
-                        if "distances" in results
-                        else None,
-                    }
-                )
+            # Format results
+            formatted_results = []
+            if results["documents"] and len(results["documents"][0]) > 0:
+                for i, doc in enumerate(results["documents"][0]):
+                    formatted_results.append(
+                        {
+                            "content": doc,
+                            "metadata": results["metadatas"][0][i],
+                            "distance": results["distances"][0][i]
+                            if "distances" in results
+                            else None,
+                        }
+                    )
 
-        self.logger.debug(
-            f"Semantic search found {len(formatted_results)} results",
-            query=query,
-            time_window_hours=time_window_hours,
-        )
+            self.logger.debug(
+                f"Semantic search found {len(formatted_results)} results",
+                query=query,
+                time_window_hours=time_window_hours,
+            )
 
-        return formatted_results
+            return formatted_results
+        except Exception as e:
+            self.logger.error(f"Semantic search failed: {e}")
+            return []  # Return empty list on error
 
     def get_recent_context(self, hours: int = 24, limit: int = 50) -> List[Dict]:
         """Get all recent messages within time window (chronological order)"""

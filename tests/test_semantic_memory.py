@@ -274,3 +274,39 @@ class TestSemanticMemory:
         results = memory.collection.get()
         generated_id = results["ids"][0]
         assert "user_" in generated_id
+
+    def test_add_message_openai_error(self, temp_chroma_dir, mock_openai_embeddings):
+        """Test add_message gracefully handles OpenAI API errors"""
+        memory = SemanticMemory(persist_directory=temp_chroma_dir)
+
+        # Make OpenAI embeddings fail
+        mock_openai_embeddings.embeddings.create.side_effect = Exception("API Error")
+
+        message = {"sensor": "temp", "value": 72}
+        # Should not raise, just log error
+        memory.add_message(message, role="user")
+
+        # Verify nothing was added
+        assert memory.collection.count() == 0
+
+    def test_search_openai_error(self, temp_chroma_dir, mock_openai_embeddings):
+        """Test search gracefully handles OpenAI API errors"""
+        memory = SemanticMemory(persist_directory=temp_chroma_dir)
+
+        # Make OpenAI embeddings fail
+        mock_openai_embeddings.embeddings.create.side_effect = Exception("API Error")
+
+        # Should return empty list, not crash
+        results = memory.search("test query")
+        assert results == []
+
+    def test_search_chromadb_error(self, temp_chroma_dir, mock_openai_embeddings):
+        """Test search gracefully handles ChromaDB errors"""
+        memory = SemanticMemory(persist_directory=temp_chroma_dir)
+
+        # Make ChromaDB query fail
+        memory.collection.query = MagicMock(side_effect=Exception("DB Error"))
+
+        # Should return empty list, not crash
+        results = memory.search("test query")
+        assert results == []

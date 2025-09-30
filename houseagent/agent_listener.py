@@ -79,14 +79,16 @@ class AgentListener:
         # Build enhanced message history with semantic context
         enhanced_history = list(self.message_history)
         if semantic_context:
-            # Inject semantic context as system-like messages
+            # Inject semantic context right before the current message
             context_message = {
                 "role": "user",
                 "content": "Relevant recent history: " + " ".join(semantic_context),
             }
-            # Insert after the first message (before current interaction)
+            # Insert before the last user message (the current one)
+            # enhanced_history has: [...older messages..., current_user_message]
+            # We want: [...older messages..., context_message, current_user_message]
             if len(enhanced_history) > 0:
-                enhanced_history.insert(0, context_message)
+                enhanced_history.insert(-1, context_message)
 
         # Generate response with full message history + semantic context
         response = self.house_bot.generate_response(
