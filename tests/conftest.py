@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, mock_open
 import json
 
 
@@ -45,20 +45,21 @@ def sample_mqtt_message():
 @pytest.fixture
 def mock_prompt_files():
     """Mock prompt file reads"""
-    return mock_open(read_data='test content')
+    return mock_open(read_data="test content")
 
 
 @pytest.fixture
 def mock_house_bot_files(monkeypatch):
     """Mock all file reads for HouseBot initialization"""
     file_contents = {
-        'prompts/housebot_system.txt': 'System prompt: {default_state}',
-        'prompts/housebot_human.txt': 'Human: {current_state} {last_state}',
-        'prompts/default_state.json': '{"default": "state"}'
+        "prompts/housebot_system.txt": "System prompt: {default_state}",
+        "prompts/housebot_human.txt": "Human: {current_state} {last_state}",
+        "prompts/default_state.json": '{"default": "state"}',
     }
 
     original_open = open
-    def mock_file_open(filename, mode='r', *args, **kwargs):
+
+    def mock_file_open(filename, mode="r", *args, **kwargs):
         if filename in file_contents:
             return mock_open(read_data=file_contents[filename])()
         return original_open(filename, mode, *args, **kwargs)

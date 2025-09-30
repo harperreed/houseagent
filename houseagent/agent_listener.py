@@ -1,8 +1,8 @@
 import os
-import logging
 import structlog
 from houseagent.house_bot import HouseBot
 import json
+
 
 class AgentListener:
     def __init__(self, client):
@@ -20,16 +20,18 @@ class AgentListener:
             self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
 
-        output = {'messages': message}
+        output = {"messages": message}
         json_output = json.dumps(output)
 
         # Log the sent batched messages at INFO level
         self.logger.info(f"Sent batched messages: {json_output}")
 
-        response = self.house_bot.generate_response(json_output, self.last_batch_messages)
+        response = self.house_bot.generate_response(
+            json_output, self.last_batch_messages
+        )
         self.last_batch_messages = json_output
 
-        topic = os.getenv('NOTIFICATION_TOPIC', 'your/input/topic/here')
+        topic = os.getenv("NOTIFICATION_TOPIC", "your/input/topic/here")
         self.client.publish(topic, response)
 
     def stop(self):

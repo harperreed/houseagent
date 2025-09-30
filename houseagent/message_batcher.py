@@ -1,7 +1,6 @@
 import time
 import json
 from queue import Queue, Empty
-import logging
 import structlog
 import os
 
@@ -57,22 +56,27 @@ class MessageBatcher:
             self.client.publish(topic, json_output)
 
             # Log the sent batched messages at INFO level
-            self.logger.info(f"Sent batched messages: {json_output}") 
+            self.logger.info(f"Sent batched messages: {json_output}")
 
         self.logger.debug("Resetting batch timer")
         self.batch_start_time = None
 
     def run(self):
-        debug = False
         while not self.stopped:
             if self.debug:
                 self.logger.debug("Checking for messages")
                 self.logger.debug(f"Queue size: {self.message_queue.qsize()}")
                 self.logger.debug(f"Batch start time: {self.batch_start_time}")
-                self.logger.debug(f"Last received timestamp: {self.last_received_timestamp}")
+                self.logger.debug(
+                    f"Last received timestamp: {self.last_received_timestamp}"
+                )
                 if self.batch_start_time:
-                    self.logger.debug(f"Timeout remainder: {(time.time() - float(self.batch_start_time))}")
-                self.logger.debug(f"Last message received: {(time.time() - float(self.last_received_timestamp))}")
+                    self.logger.debug(
+                        f"Timeout remainder: {(time.time() - float(self.batch_start_time))}"
+                    )
+                self.logger.debug(
+                    f"Last message received: {(time.time() - float(self.last_received_timestamp))}"
+                )
                 self.logger.debug(f"timeout: {self.timeout}")
 
             if (

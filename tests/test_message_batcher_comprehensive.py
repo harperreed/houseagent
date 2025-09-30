@@ -1,5 +1,5 @@
 """Comprehensive tests for MessageBatcher class"""
-import pytest
+
 from unittest.mock import MagicMock, patch
 import json
 import time
@@ -16,10 +16,10 @@ class TestMessageBatcherComprehensive:
 
         assert batcher.client == mock_client
         assert batcher.timeout == 60
-        assert batcher.stopped == False
+        assert not batcher.stopped
         assert batcher.batch_start_time == 0
         assert batcher.message_queue.empty()
-        assert batcher.last_batch_messages == None
+        assert batcher.last_batch_messages is None
 
     def test_on_message_valid_json(self):
         """Test processing valid JSON message"""
@@ -104,7 +104,7 @@ class TestMessageBatcherComprehensive:
 
         assert batcher.message_queue.empty()
         mock_client.publish.assert_called_once()
-        assert batcher.batch_start_time == None
+        assert batcher.batch_start_time is None
 
     def test_send_batched_messages_with_empty_queue(self):
         """Test sending batch with empty queue"""
@@ -114,11 +114,11 @@ class TestMessageBatcherComprehensive:
         batcher.send_batched_messages()
 
         mock_client.publish.assert_not_called()
-        assert batcher.batch_start_time == None
+        assert batcher.batch_start_time is None
 
     def test_send_batched_messages_publishes_to_correct_topic(self, monkeypatch):
         """Test batch publishes to configured topic"""
-        monkeypatch.setenv('MESSAGE_BUNDLE_TOPIC', 'test/batch/topic')
+        monkeypatch.setenv("MESSAGE_BUNDLE_TOPIC", "test/batch/topic")
 
         mock_client = MagicMock()
         batcher = MessageBatcher(mock_client, timeout=60)
@@ -130,7 +130,7 @@ class TestMessageBatcherComprehensive:
         batcher.send_batched_messages()
 
         args = mock_client.publish.call_args
-        assert args[0][0] == 'test/batch/topic'
+        assert args[0][0] == "test/batch/topic"
 
     def test_send_batched_messages_format(self):
         """Test batch message has correct JSON structure"""
@@ -140,7 +140,7 @@ class TestMessageBatcherComprehensive:
         test_messages = [
             {"message": "first"},
             {"message": "second"},
-            {"message": "third"}
+            {"message": "third"},
         ]
 
         for msg_data in test_messages:
@@ -153,11 +153,11 @@ class TestMessageBatcherComprehensive:
         args = mock_client.publish.call_args
         batch_content = json.loads(args[0][1])
 
-        assert 'messages' in batch_content
-        assert len(batch_content['messages']) == 3
+        assert "messages" in batch_content
+        assert len(batch_content["messages"]) == 3
 
-    @patch('houseagent.message_batcher.time.sleep')
-    @patch('houseagent.message_batcher.time.time')
+    @patch("houseagent.message_batcher.time.sleep")
+    @patch("houseagent.message_batcher.time.time")
     def test_run_timeout_triggers_send(self, mock_time, mock_sleep):
         """Test timeout triggers batch send"""
         mock_client = MagicMock()
@@ -186,25 +186,25 @@ class TestMessageBatcherComprehensive:
         mock_client = MagicMock()
         batcher = MessageBatcher(mock_client, timeout=60)
 
-        assert batcher.stopped == False
+        assert not batcher.stopped
         batcher.stop()
-        assert batcher.stopped == True
+        assert batcher.stopped
 
     def test_debug_mode_enabled(self, monkeypatch):
         """Test debug mode can be enabled"""
-        monkeypatch.setenv('DEBUG', '1')
+        monkeypatch.setenv("DEBUG", "1")
 
         mock_client = MagicMock()
         batcher = MessageBatcher(mock_client, timeout=60)
 
-        assert batcher.debug == '1'
+        assert batcher.debug == "1"
 
     def test_last_batch_messages_updates(self):
         """Test last_batch_messages is updated after send"""
         mock_client = MagicMock()
         batcher = MessageBatcher(mock_client, timeout=60)
 
-        assert batcher.last_batch_messages == None
+        assert batcher.last_batch_messages is None
 
         msg = MagicMock()
         msg.payload = json.dumps({"test": "data"}).encode()
@@ -272,7 +272,7 @@ class TestMessageBatcherComprehensive:
         batcher = MessageBatcher(mock_client, timeout=60)
 
         msg = MagicMock()
-        msg.payload = json.dumps({"text": "Hello 世界 مرحبا"}).encode('utf-8')
+        msg.payload = json.dumps({"text": "Hello 世界 مرحبا"}).encode("utf-8")
 
         batcher.on_message(mock_client, None, msg)
 

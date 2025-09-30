@@ -1,6 +1,5 @@
 # ABOUTME: HouseBot manages AI-powered home automation responses using OpenAI
 # ABOUTME: Processes sensor state changes and generates witty GlaDOS-style responses
-import logging
 import structlog
 import json
 import os
@@ -11,17 +10,17 @@ from openai import OpenAI
 class HouseBot:
     def __init__(self):
         self.logger = structlog.getLogger(__name__)
-        prompt_dir = 'prompts'
+        prompt_dir = "prompts"
 
-        human_prompt_filename = 'housebot_human.txt'
-        system_prompt_filename = 'housebot_system.txt'
-        default_state_filename = 'default_state.json'
+        human_prompt_filename = "housebot_human.txt"
+        system_prompt_filename = "housebot_system.txt"
+        default_state_filename = "default_state.json"
 
-        with open(f'{prompt_dir}/{system_prompt_filename}', 'r') as f:
+        with open(f"{prompt_dir}/{system_prompt_filename}", "r") as f:
             self.system_prompt_template = f.read()
-        with open(f'{prompt_dir}/{human_prompt_filename}', 'r') as f:
+        with open(f"{prompt_dir}/{human_prompt_filename}", "r") as f:
             self.human_prompt_template = f.read()
-        with open(f'{prompt_dir}/{default_state_filename}', 'r') as f:
+        with open(f"{prompt_dir}/{default_state_filename}", "r") as f:
             self.default_state = f.read()
 
         openai_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
@@ -32,21 +31,20 @@ class HouseBot:
         self.temperature = openai_temperature
 
     def strip_emojis(self, text):
-        RE_EMOJI = re.compile('[\U00010000-\U0010ffff]', flags=re.UNICODE)
-        return RE_EMOJI.sub(r'', text)
+        RE_EMOJI = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
+        return RE_EMOJI.sub(r"", text)
 
     def generate_response(self, current_state, last_state):
         self.logger.debug("let's make a request")
 
         # Format the system prompt with default state
         system_prompt = self.system_prompt_template.format(
-            default_state=json.dumps(self.default_state, separators=(',', ':'))
+            default_state=json.dumps(self.default_state, separators=(",", ":"))
         )
 
         # Format the human prompt with current and last state
         human_prompt = self.human_prompt_template.format(
-            current_state=current_state,
-            last_state=last_state
+            current_state=current_state, last_state=last_state
         )
 
         # Make the OpenAI API call directly
@@ -55,8 +53,8 @@ class HouseBot:
             temperature=self.temperature,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": human_prompt}
-            ]
+                {"role": "user", "content": human_prompt},
+            ],
         )
 
         result = response.choices[0].message.content

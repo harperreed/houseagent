@@ -1,4 +1,5 @@
 """Integration tests for HouseAgent system"""
+
 import pytest
 from unittest.mock import MagicMock, patch
 import json
@@ -9,12 +10,12 @@ from houseagent.agent_listener import AgentListener
 class TestIntegration:
     """Integration tests for complete message flow"""
 
-    @patch('houseagent.message_batcher.time.sleep')
-    @patch('houseagent.message_batcher.time.time')
+    @patch("houseagent.message_batcher.time.sleep")
+    @patch("houseagent.message_batcher.time.time")
     def test_message_batcher_to_agent_flow(self, mock_time, mock_sleep):
         """Test complete flow from message batcher to agent listener"""
         mock_collector_client = MagicMock()
-        mock_agent_client = MagicMock()
+        MagicMock()
 
         # Create message batcher (collector side)
         batcher = MessageBatcher(mock_collector_client, timeout=5)
@@ -23,7 +24,7 @@ class TestIntegration:
         sensor_messages = [
             {"sensor": "temperature", "value": 72, "room": "living_room"},
             {"sensor": "humidity", "value": 45, "room": "living_room"},
-            {"sensor": "motion", "detected": True, "room": "kitchen"}
+            {"sensor": "motion", "detected": True, "room": "kitchen"},
         ]
 
         for sensor_data in sensor_messages:
@@ -42,15 +43,15 @@ class TestIntegration:
 
         # Extract the published message
         publish_call = mock_collector_client.publish.call_args
-        published_topic = publish_call[0][0]
+        publish_call[0][0]
         published_payload = publish_call[0][1]
 
         # Verify the payload structure
         batch_data = json.loads(published_payload)
-        assert 'messages' in batch_data
-        assert len(batch_data['messages']) == 3
+        assert "messages" in batch_data
+        assert len(batch_data["messages"]) == 3
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_agent_listener_processes_batch(self, mock_house_bot):
         """Test agent listener processes batched messages"""
         mock_house_bot_instance = MagicMock()
@@ -64,7 +65,7 @@ class TestIntegration:
         batch_data = {
             "messages": [
                 {"sensor": "temperature", "value": 72},
-                {"sensor": "humidity", "value": 45}
+                {"sensor": "humidity", "value": 45},
             ]
         }
 
@@ -78,11 +79,11 @@ class TestIntegration:
 
         # Verify response was published
         mock_client.publish.assert_called_once_with(
-            'your/input/topic/here',  # default topic
-            'AI generated response'
+            "your/input/topic/here",  # default topic
+            "AI generated response",
         )
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_multiple_message_cycles(self, mock_house_bot):
         """Test multiple cycles of message processing"""
         mock_house_bot_instance = MagicMock()
@@ -90,7 +91,7 @@ class TestIntegration:
         mock_house_bot_instance.generate_response.side_effect = [
             "First response",
             "Second response",
-            "Third response"
+            "Third response",
         ]
 
         mock_client = MagicMock()
@@ -122,7 +123,11 @@ class TestIntegration:
         original_message = {
             "sensor_id": "temp_001",
             "location": {"room": "bedroom", "floor": 2},
-            "reading": {"value": 72.5, "unit": "F", "timestamp": "2024-01-01T00:00:00Z"}
+            "reading": {
+                "value": 72.5,
+                "unit": "F",
+                "timestamp": "2024-01-01T00:00:00Z",
+            },
         }
 
         msg = MagicMock()
@@ -136,9 +141,9 @@ class TestIntegration:
         batch_data = json.loads(published_payload)
 
         # Verify original structure is preserved
-        assert batch_data['messages'][0] == original_message
+        assert batch_data["messages"][0] == original_message
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_error_handling_in_pipeline(self, mock_house_bot):
         """Test error handling doesn't break message flow"""
         mock_house_bot_instance = MagicMock()
@@ -147,7 +152,7 @@ class TestIntegration:
         # First call fails, second succeeds
         mock_house_bot_instance.generate_response.side_effect = [
             Exception("API Error"),
-            "Success response"
+            "Success response",
         ]
 
         mock_client = MagicMock()
@@ -192,9 +197,9 @@ class TestIntegration:
         # Verify all messages are in the batch
         published_payload = mock_client.publish.call_args[0][1]
         batch_data = json.loads(published_payload)
-        assert len(batch_data['messages']) == 1000
+        assert len(batch_data["messages"]) == 1000
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_state_preservation_across_messages(self, mock_house_bot):
         """Test state is correctly preserved between message cycles"""
         mock_house_bot_instance = MagicMock()
@@ -204,11 +209,7 @@ class TestIntegration:
         mock_client = MagicMock()
         listener = AgentListener(mock_client)
 
-        messages = [
-            {"temperature": 70},
-            {"temperature": 72},
-            {"temperature": 75}
-        ]
+        messages = [{"temperature": 70}, {"temperature": 72}, {"temperature": 75}]
 
         previous_states = []
 

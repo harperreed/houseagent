@@ -1,0 +1,4 @@
+openai>=1.52.2
+paho-mqtt>=2.1.0
+python-dotenv>=1.0.1
+structlog>=24.4.0
