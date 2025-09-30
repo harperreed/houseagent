@@ -5,11 +5,19 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
+# Set Python to not write bytecode (slightly faster startup)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 # Copy dependency files first (better layer caching)
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies (cached unless pyproject.toml/uv.lock change)
-RUN uv sync --frozen --no-dev
+# Install dependencies with cache mount and parallel downloads
+ENV UV_CONCURRENT_DOWNLOADS=16
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev && \
+    # Compile Python files to bytecode (faster startup)
+    uv run python -m compileall -q /app/.venv/lib/python*/site-packages/ || true
 
 # Copy application code (changes frequently, but deps are cached)
 COPY houseagent/ ./houseagent/
