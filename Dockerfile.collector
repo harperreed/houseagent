@@ -1,37 +1,12 @@
-# ABOUTME: Multistage Dockerfile for HouseAgent MQTT collector service
-# ABOUTME: Uses UV for fast dependency installation and minimal production image
+# ABOUTME: Dockerfile for HouseAgent MQTT collector service
+# ABOUTME: Uses UV for dependency management and runtime
 
-# Stage 1: Build dependencies
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
-
-WORKDIR /app
-
-# Copy dependency files first for better layer caching
-COPY pyproject.toml uv.lock ./
-
-# Copy source code (needed for uv sync to install the package)
-COPY houseagent ./houseagent
-
-# Install dependencies to a virtual environment using lockfile
-RUN uv sync --frozen --no-cache --no-dev
-
-# Stage 2: Production runtime
-FROM debian:bookworm-slim
-
-# Install uv for runtime
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Copy virtual environment from builder stage
-COPY --from=builder /app/.venv /app/.venv
+# Copy everything
+COPY . .
 
-# Copy application code
-COPY houseagent ./houseagent
-COPY collector.py ./
-
-# Ensure we use the virtual environment
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Run the collector
+# Run with uv (handles dependencies automatically)
 CMD ["uv", "run", "collector.py"]
