@@ -54,7 +54,7 @@ class MessageBatcher:
             self.logger.debug(f"Response: {json_output}")
 
             topic = os.getenv("MESSAGE_BUNDLE_TOPIC", "your/input/topic/here")
-            self.client.publish(topic, json.dumps(json_output))
+            self.client.publish(topic, json_output)
 
             # Log the sent batched messages at INFO level
             self.logger.info(f"Sent batched messages: {json_output}") 

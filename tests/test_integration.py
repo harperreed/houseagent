@@ -47,9 +47,8 @@ class TestIntegration:
 
         # Verify the payload structure
         batch_data = json.loads(published_payload)
-        inner_data = json.loads(batch_data)
-        assert 'messages' in inner_data
-        assert len(inner_data['messages']) == 3
+        assert 'messages' in batch_data
+        assert len(batch_data['messages']) == 3
 
     @patch('houseagent.agent_listener.HouseBot')
     def test_agent_listener_processes_batch(self, mock_house_bot):
@@ -135,10 +134,9 @@ class TestIntegration:
         # Extract published message
         published_payload = mock_client.publish.call_args[0][1]
         batch_data = json.loads(published_payload)
-        inner_data = json.loads(batch_data)
 
         # Verify original structure is preserved
-        assert inner_data['messages'][0] == original_message
+        assert batch_data['messages'][0] == original_message
 
     @patch('houseagent.agent_listener.HouseBot')
     def test_error_handling_in_pipeline(self, mock_house_bot):
@@ -194,8 +192,7 @@ class TestIntegration:
         # Verify all messages are in the batch
         published_payload = mock_client.publish.call_args[0][1]
         batch_data = json.loads(published_payload)
-        inner_data = json.loads(batch_data)
-        assert len(inner_data['messages']) == 1000
+        assert len(batch_data['messages']) == 1000
 
     @patch('houseagent.agent_listener.HouseBot')
     def test_state_preservation_across_messages(self, mock_house_bot):

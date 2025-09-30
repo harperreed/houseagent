@@ -151,8 +151,7 @@ class TestMessageBatcherComprehensive:
         batcher.send_batched_messages()
 
         args = mock_client.publish.call_args
-        published_data = json.loads(args[0][1])
-        batch_content = json.loads(published_data)
+        batch_content = json.loads(args[0][1])
 
         assert 'messages' in batch_content
         assert len(batch_content['messages']) == 3
