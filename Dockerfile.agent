@@ -1,6 +1,22 @@
 # ABOUTME: Dockerfile for HouseAgent MQTT agent service
-# ABOUTME: Uses UV for dependency management with optimized caching
+# ABOUTME: Uses UV for dependency management with multi-stage build for fast rebuilds
 
+# Stage 1: Build dependencies (cached unless pyproject.toml/uv.lock change)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies with cache mount and parallel downloads
+ENV UV_CONCURRENT_DOWNLOADS=16
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev && \
+    # Compile Python files to bytecode (faster startup)
+    uv run python -m compileall -q /app/.venv/lib/python*/site-packages/ || true
+
+# Stage 2: Runtime (only this stage rebuilds on code changes)
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
@@ -9,18 +25,10 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Copy dependency files first (better layer caching)
-COPY pyproject.toml uv.lock ./
+# Copy virtual environment from builder (pre-compiled dependencies)
+COPY --from=builder /app/.venv /app/.venv
 
-# Install dependencies with cache mount and parallel downloads
-# BuildKit cache mount persists downloads across builds
-ENV UV_CONCURRENT_DOWNLOADS=16
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev && \
-    # Compile Python files to bytecode (faster startup)
-    uv run python -m compileall -q /app/.venv/lib/python*/site-packages/ || true
-
-# Copy application code (changes frequently, but deps are cached)
+# Copy application code (changes frequently, but deps are from builder)
 COPY houseagent/ ./houseagent/
 COPY agent.py prompts/ ./
 

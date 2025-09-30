@@ -1,15 +1,12 @@
 # ABOUTME: Dockerfile for HouseAgent MQTT collector service
-# ABOUTME: Uses UV for dependency management with optimized caching
+# ABOUTME: Uses UV for dependency management with multi-stage build for fast rebuilds
 
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# Stage 1: Build dependencies (cached unless pyproject.toml/uv.lock change)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Set Python to not write bytecode (slightly faster startup)
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Copy dependency files first (better layer caching)
+# Copy dependency files
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies with cache mount and parallel downloads
@@ -19,7 +16,19 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # Compile Python files to bytecode (faster startup)
     uv run python -m compileall -q /app/.venv/lib/python*/site-packages/ || true
 
-# Copy application code (changes frequently, but deps are cached)
+# Stage 2: Runtime (only this stage rebuilds on code changes)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+# Set Python to not write bytecode (slightly faster startup)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Copy virtual environment from builder (pre-compiled dependencies)
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy application code (changes frequently, but deps are from builder)
 COPY houseagent/ ./houseagent/
 COPY collector.py ./
 
