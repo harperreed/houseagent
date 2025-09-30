@@ -62,7 +62,6 @@ class HouseBot:
         # Make the OpenAI API call directly
         response = self.client.chat.completions.create(
             model=self.model,
-            temperature=self.temperature,
             messages=messages,
         )
 
