@@ -57,4 +57,4 @@ except KeyboardInterrupt:
     agent_client.stop()
 
 client.loop_stop()
-client.disconnect
+client.disconnect()

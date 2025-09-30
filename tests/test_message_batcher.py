@@ -42,7 +42,7 @@ class TestMessageBatcher(unittest.TestCase):
         self.message_batcher.batch_start_time = 999
         self.message_batcher.message_queue.put({"text": "Test message"})
 
-        def stop_after_one_iteration():
+        def stop_after_one_iteration(*args):
             self.message_batcher.stopped = True
 
         mock_sleep.side_effect = stop_after_one_iteration
