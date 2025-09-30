@@ -10,7 +10,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies with cache mount and parallel downloads
-ENV UV_CONCURRENT_DOWNLOADS=16
+ENV UV_CONCURRENT_DOWNLOADS=16 \
+    UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev && \
     # Compile Python files to bytecode (faster startup)
