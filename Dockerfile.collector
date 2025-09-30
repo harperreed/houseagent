@@ -1,12 +1,19 @@
 # ABOUTME: Dockerfile for HouseAgent MQTT collector service
-# ABOUTME: Uses UV for dependency management and runtime
+# ABOUTME: Uses UV for dependency management with optimized caching
 
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Copy everything
-COPY . .
+# Copy dependency files first (better layer caching)
+COPY pyproject.toml uv.lock ./
 
-# Run with uv (handles dependencies automatically)
+# Install dependencies (cached unless pyproject.toml/uv.lock change)
+RUN uv sync --frozen --no-dev
+
+# Copy application code (changes frequently, but deps are cached)
+COPY houseagent/ ./houseagent/
+COPY collector.py ./
+
+# Run with uv
 CMD ["uv", "run", "collector.py"]

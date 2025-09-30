@@ -43,3 +43,10 @@ LICENSE
 
 # Pre-commit
 .pre-commit-config.yaml
+
+# ChromaDB local data (not needed in container)
+chroma_data/
+
+# Temp files
+output.txt
+code-review.md
