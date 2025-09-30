@@ -9,6 +9,7 @@ services:
     volumes:
       - ./.env:/app/.env
       - ./prompts:/app/prompts
+      - chroma-data:/app/chroma_data
   sensor-collector:
     build:
       context: .
@@ -18,3 +19,7 @@ services:
     volumes:
       - ./.env:/app/.env
       - ./house_agent.log:/app/house_collector.log
+
+volumes:
+  chroma-data:
+    driver: local
