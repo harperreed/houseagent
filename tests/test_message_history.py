@@ -13,7 +13,9 @@ class TestMessageHistory:
     def test_agent_listener_initializes_with_history_size(self, mock_house_bot):
         """Test AgentListener initializes with configurable history size"""
         mock_client = MagicMock()
-        listener = AgentListener(mock_client, history_size=20)
+        listener = AgentListener(
+            mock_client, history_size=20, use_semantic_memory=False
+        )
 
         assert listener.history_size == 20
         assert len(listener.message_history) == 0
@@ -23,7 +25,7 @@ class TestMessageHistory:
     def test_agent_listener_default_history_size(self, mock_house_bot):
         """Test AgentListener uses default history size of 10"""
         mock_client = MagicMock()
-        listener = AgentListener(mock_client)
+        listener = AgentListener(mock_client, use_semantic_memory=False)
 
         assert listener.history_size == 10
         assert listener.message_history.maxlen == 10
@@ -36,7 +38,9 @@ class TestMessageHistory:
         mock_house_bot_instance.generate_response.return_value = "Response 1"
 
         mock_client = MagicMock()
-        listener = AgentListener(mock_client, history_size=10)
+        listener = AgentListener(
+            mock_client, history_size=10, use_semantic_memory=False
+        )
 
         msg = MagicMock()
         msg.payload = json.dumps({"sensor": "temp", "value": 22}).encode()
@@ -57,7 +61,9 @@ class TestMessageHistory:
         mock_house_bot_instance.generate_response.return_value = "Response"
 
         mock_client = MagicMock()
-        listener = AgentListener(mock_client, history_size=10)
+        listener = AgentListener(
+            mock_client, history_size=10, use_semantic_memory=False
+        )
 
         msg = MagicMock()
         msg.payload = json.dumps({"test": "data"}).encode()
@@ -80,7 +86,9 @@ class TestMessageHistory:
         mock_house_bot_instance.generate_response.return_value = "Response"
 
         mock_client = MagicMock()
-        listener = AgentListener(mock_client, history_size=4)  # Small window
+        listener = AgentListener(
+            mock_client, history_size=4, use_semantic_memory=False
+        )  # Small window
 
         # Send 3 messages (will create 6 entries: 3 user + 3 assistant)
         for i in range(3):
@@ -107,7 +115,9 @@ class TestMessageHistory:
         ]
 
         mock_client = MagicMock()
-        listener = AgentListener(mock_client, history_size=10)
+        listener = AgentListener(
+            mock_client, history_size=10, use_semantic_memory=False
+        )
 
         # First message
         msg1 = MagicMock()

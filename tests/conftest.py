@@ -65,3 +65,21 @@ def mock_house_bot_files(monkeypatch):
         return original_open(filename, mode, *args, **kwargs)
 
     monkeypatch.setattr("builtins.open", mock_file_open)
+
+
+@pytest.fixture(autouse=True)
+def disable_semantic_memory(monkeypatch):
+    """Automatically disable semantic memory for all tests unless explicitly overridden"""
+    # Patch AgentListener's __init__ to default use_semantic_memory=False
+    from houseagent.agent_listener import AgentListener
+
+    original_init = AgentListener.__init__
+
+    def patched_init(
+        self, client, history_size=10, use_semantic_memory=False, semantic_time_window=2
+    ):
+        original_init(
+            self, client, history_size, use_semantic_memory, semantic_time_window
+        )
+
+    monkeypatch.setattr(AgentListener, "__init__", patched_init)
