@@ -34,7 +34,7 @@ class HouseBot:
         RE_EMOJI = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
         return RE_EMOJI.sub(r"", text)
 
-    def generate_response(self, current_state, last_state):
+    def generate_response(self, current_state, last_state, message_history=None):
         self.logger.debug("let's make a request")
 
         # Format the system prompt with default state
@@ -42,19 +42,28 @@ class HouseBot:
             default_state=json.dumps(self.default_state, separators=(",", ":"))
         )
 
-        # Format the human prompt with current and last state
-        human_prompt = self.human_prompt_template.format(
-            current_state=current_state, last_state=last_state
-        )
+        # Build messages array
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # If we have message history, use it instead of just last_state
+        if message_history and len(message_history) > 0:
+            # Use the full conversation history
+            messages.extend(message_history)
+            self.logger.debug(
+                f"Using message history with {len(message_history)} messages"
+            )
+        else:
+            # Fallback to old behavior with just current and last state
+            human_prompt = self.human_prompt_template.format(
+                current_state=current_state, last_state=last_state
+            )
+            messages.append({"role": "user", "content": human_prompt})
 
         # Make the OpenAI API call directly
         response = self.client.chat.completions.create(
             model=self.model,
             temperature=self.temperature,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": human_prompt},
-            ],
+            messages=messages,
         )
 
         result = response.choices[0].message.content
