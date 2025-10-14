@@ -1,0 +1,70 @@
+# HouseAgent Web Dashboard
+
+Real-time monitoring interface for HouseAgent with live MQTT message streaming.
+
+## Features
+
+- **Real-time Updates**: Server-Sent Events (SSE) for instant message streaming
+- **GlaDOS Responses**: See AI-generated responses as they happen
+- **Situation Detection**: Monitor clustered events and correlated sensor data
+- **Sensor Events**: Live feed of all sensor activity
+- **System Log**: Complete event history
+
+## Running the Dashboard
+
+### Local Development
+
+```bash
+uv run web_dashboard.py
+```
+
+Access at: http://localhost:5000
+
+### Docker Compose
+
+```bash
+docker-compose up dashboard
+```
+
+Access at: http://localhost:5000
+
+## Dashboard Panels
+
+**GlaDOS Responses** (Magenta)
+- AI-generated witty responses
+- Updates when agent publishes to NOTIFICATION_TOPIC
+
+**Situations Detected** (Cyan)
+- Clustered sensor events
+- Shows zones, sensor types, and confidence scores
+- Updates from MESSAGE_BUNDLE_TOPIC
+
+**Recent Sensor Events** (Yellow)
+- Individual sensor messages
+- Home Assistant entity updates
+- Office hierarchical sensor data
+
+**All Events** (Green)
+- Complete system log
+- Raw MQTT message payloads
+- Debugging and monitoring
+
+## Configuration
+
+The dashboard automatically uses your `.env` configuration:
+- `MQTT_BROKER_ADDRESS` - MQTT broker host
+- `MQTT_PORT` - MQTT broker port
+- `MQTT_USERNAME` / `MQTT_PASSWORD` - Authentication (optional)
+- `SUBSCRIBE_TOPIC` - Legacy sensor topic
+- `NOTIFICATION_TOPIC` - AI response topic
+- `MESSAGE_BUNDLE_TOPIC` - Situation bundles topic
+
+## Theme
+
+Classic terminal aesthetic with color-coded message types:
+- 🟣 Magenta = AI Responses (GlaDOS)
+- 🔵 Cyan = Situations (Event clusters)
+- 🟡 Yellow = Sensors (Raw data)
+- 🟢 Green = System messages
+
+Matrix-style green-on-black with retro CRT vibes.

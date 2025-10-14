@@ -19,6 +19,18 @@ services:
     volumes:
       - ./.env:/app/.env
       - ./house_agent.log:/app/house_collector.log
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: dashboard
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./.env:/app/.env
+    environment:
+      - FLASK_ENV=production
 
 volumes:
   chroma-data:

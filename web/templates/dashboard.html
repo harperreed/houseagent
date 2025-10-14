@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HouseAgent Dashboard - GlaDOS is Watching</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 HouseAgent Dashboard</h1>
+            <div class="status">
+                <span id="status-indicator" class="status-dot connecting"></span>
+                <span id="status-text">Connecting...</span>
+                <span id="message-count">0 messages</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- AI Responses -->
+            <div class="panel ai-panel">
+                <h2>GlaDOS Responses</h2>
+                <div id="ai-messages" class="message-list"></div>
+            </div>
+
+            <!-- Situations -->
+            <div class="panel situation-panel">
+                <h2>Situations Detected</h2>
+                <div id="situations" class="message-list"></div>
+            </div>
+
+            <!-- Sensor Events -->
+            <div class="panel sensor-panel">
+                <h2>Recent Sensor Events</h2>
+                <div id="sensor-events" class="message-list"></div>
+            </div>
+
+            <!-- System Log -->
+            <div class="panel log-panel">
+                <h2>All Events</h2>
+                <div id="all-events" class="message-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const aiMessages = document.getElementById('ai-messages');
+        const situations = document.getElementById('situations');
+        const sensorEvents = document.getElementById('sensor-events');
+        const allEvents = document.getElementById('all-events');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const messageCount = document.getElementById('message-count');
+
+        let totalMessages = 0;
+
+        // Connect to SSE stream
+        const eventSource = new EventSource('/stream');
+
+        eventSource.onopen = () => {
+            statusIndicator.className = 'status-dot connected';
+            statusText.textContent = 'Connected';
+        };
+
+        eventSource.onerror = () => {
+            statusIndicator.className = 'status-dot error';
+            statusText.textContent = 'Connection Error';
+        };
+
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            totalMessages++;
+            messageCount.textContent = `${totalMessages} messages`;
+
+            // Add to appropriate panel
+            addMessage(data);
+
+            // Add to all events
+            addToAllEvents(data);
+        };
+
+        function addMessage(data) {
+            const timestamp = new Date(data.timestamp).toLocaleTimeString();
+
+            if (data.type === 'ai_response') {
+                // GlaDOS response
+                const msg = createMessageElement(
+                    timestamp,
+                    data.payload,
+                    'ai'
+                );
+                prependMessage(aiMessages, msg);
+            } else if (data.type === 'situation') {
+                // Situation bundle
+                const payload = data.payload;
+                const situation = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                const msg = createSituationElement(timestamp, situation);
+                prependMessage(situations, msg);
+            } else {
+                // Sensor event
+                const msg = createSensorElement(timestamp, data.topic, data.payload);
+                prependMessage(sensorEvents, msg);
+            }
+        }
+
+        function createMessageElement(timestamp, content, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = `
+                <div class="message-time">${timestamp}</div>
+                <div class="message-content">${escapeHtml(String(content))}</div>
+            `;
+            return div;
+        }
+
+        function createSituationElement(timestamp, situation) {
+            const div = document.createElement('div');
+            div.className = 'message situation';
+
+            const messages = situation.messages || [];
+            const zones = messages.map(m => m.zone_id).filter((v, i, a) => a.indexOf(v) === i);
+            const types = messages.map(m => m.sensor_type).filter((v, i, a) => a.indexOf(v) === i);
+
+            div.innerHTML = `
+                <div class="message-time">${timestamp}</div>
+                <div class="message-content">
+                    <strong>${messages.length} events</strong> in ${zones.join(', ')}
+                    <br>Sensors: ${types.join(', ')}
+                    ${situation.confidence ? `<br>Confidence: ${(situation.confidence * 100).toFixed(0)}%` : ''}
+                </div>
+            `;
+            return div;
+        }
+
+        function createSensorElement(timestamp, topic, payload) {
+            const div = document.createElement('div');
+            div.className = 'message sensor';
+
+            let content = '';
+            if (typeof payload === 'object') {
+                const entity = payload.entity_id || payload.sensor_id || 'unknown';
+                const state = payload.to_state || payload.value || JSON.stringify(payload);
+                content = `<strong>${entity}</strong>: ${escapeHtml(String(state))}`;
+            } else {
+                content = escapeHtml(String(payload));
+            }
+
+            div.innerHTML = `
+                <div class="message-time">${timestamp}</div>
+                <div class="message-topic">${topic}</div>
+                <div class="message-content">${content}</div>
+            `;
+            return div;
+        }
+
+        function addToAllEvents(data) {
+            const timestamp = new Date(data.timestamp).toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `message ${data.type}`;
+            div.innerHTML = `
+                <div class="message-time">${timestamp}</div>
+                <div class="message-topic">${data.topic}</div>
+                <div class="message-content">${escapeHtml(JSON.stringify(data.payload, null, 2))}</div>
+            `;
+            prependMessage(allEvents, div);
+        }
+
+        function prependMessage(container, element) {
+            container.insertBefore(element, container.firstChild);
+            // Keep only last 20 messages
+            while (container.children.length > 20) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load initial messages
+        fetch('/api/messages')
+            .then(r => r.json())
+            .then(messages => {
+                messages.reverse().forEach(msg => {
+                    addMessage(msg);
+                    addToAllEvents(msg);
+                });
+            });
+    </script>
+</body>
+</html>

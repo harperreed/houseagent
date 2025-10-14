@@ -1,0 +1,38 @@
+# ABOUTME: Dockerfile for HouseAgent web dashboard
+# ABOUTME: Real-time monitoring interface with SSE for live updates
+
+# Stage 1: Build dependencies
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies
+ENV UV_CONCURRENT_DOWNLOADS=16 \
+    UV_LINK_MODE=copy
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev && \
+    uv run python -m compileall -q /app/.venv/lib/python*/site-packages/ || true
+
+# Stage 2: Runtime
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy application code
+COPY web_dashboard.py ./
+COPY web/ ./web/
+
+# Expose web port
+EXPOSE 5000
+
+# Run dashboard
+CMD ["uv", "run", "web_dashboard.py"]
