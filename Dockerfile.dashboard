@@ -32,7 +32,7 @@ COPY web_dashboard.py ./
 COPY web/ ./web/
 
 # Expose web port
-EXPOSE 5000
+EXPOSE 5001
 
 # Run dashboard
 CMD ["uv", "run", "web_dashboard.py"]

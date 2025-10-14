@@ -18,7 +18,7 @@ Real-time monitoring interface for HouseAgent with live MQTT message streaming.
 uv run web_dashboard.py
 ```
 
-Access at: http://localhost:5000
+Access at: http://localhost:5001
 
 ### Docker Compose
 
@@ -26,7 +26,7 @@ Access at: http://localhost:5000
 docker-compose up dashboard
 ```
 
-Access at: http://localhost:5000
+Access at: http://localhost:5001
 
 ## Dashboard Panels
 

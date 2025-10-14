@@ -136,4 +136,5 @@ def status():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    port = int(os.getenv("DASHBOARD_PORT", "5001"))
+    app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
