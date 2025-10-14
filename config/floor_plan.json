@@ -1,0 +1,26 @@
+{
+  "zones": {
+    "lobby": {
+      "name": "Main Lobby",
+      "floor": 1,
+      "polygon": [[0, 0], [10, 0], [10, 10], [0, 10]]
+    },
+    "conf_a": {
+      "name": "Conference Room A",
+      "floor": 1,
+      "polygon": [[10, 0], [20, 0], [20, 10], [10, 10]]
+    },
+    "conf_b": {
+      "name": "Conference Room B",
+      "floor": 1,
+      "polygon": [[0, 10], [10, 10], [10, 20], [0, 20]]
+    }
+  },
+  "adjacency": {
+    "lobby": ["conf_a", "conf_b"],
+    "conf_a": ["lobby"],
+    "conf_b": ["lobby"]
+  },
+  "cameras": [],
+  "sensors": {}
+}
