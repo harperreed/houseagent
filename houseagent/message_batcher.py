@@ -3,6 +3,8 @@ import json
 from queue import Queue, Empty
 import structlog
 import os
+from houseagent.schemas import SensorMessage, LegacyMessage
+from pydantic import ValidationError
 
 
 class MessageBatcher:
@@ -18,6 +20,9 @@ class MessageBatcher:
         self.client = client
         self.last_batch_messages = None
 
+        # Schema validation
+        self.zone_map = {}  # TODO: Load from config
+
     def on_message(self, client, userdata, msg):
         try:
             message = json.loads(msg.payload)
@@ -25,6 +30,35 @@ class MessageBatcher:
         except json.JSONDecodeError:
             self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
+
+        # Try to validate as SensorMessage
+        try:
+            validated = SensorMessage(**message)
+            message = validated.model_dump()
+        except ValidationError as sensor_error:
+            # Try legacy format only if it has legacy fields (sensor, room, value)
+            has_legacy_fields = any(
+                key in message for key in ["sensor", "room", "value"]
+            )
+            if has_legacy_fields:
+                try:
+                    # Validate as legacy message first
+                    _ = LegacyMessage(**message)
+                    validated = SensorMessage.from_legacy(message, self.zone_map)
+                    message = validated.model_dump()
+                except ValidationError as e:
+                    self.logger.warning(
+                        "message.validation_failed", error=str(e), payload=message
+                    )
+                    message["validation_failed"] = True
+            else:
+                # Not legacy format, mark as validation failed
+                self.logger.warning(
+                    "message.validation_failed",
+                    error=str(sensor_error),
+                    payload=message,
+                )
+                message["validation_failed"] = True
 
         self.last_received_timestamp = time.time()
         self.message_queue.put(message)

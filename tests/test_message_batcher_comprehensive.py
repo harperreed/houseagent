@@ -280,3 +280,42 @@ class TestMessageBatcherComprehensive:
 
         batcher.send_batched_messages()
         mock_client.publish.assert_called_once()
+
+    def test_message_batcher_validates_sensor_messages(self):
+        """Test MessageBatcher validates incoming messages with schema"""
+        mock_client = MagicMock()
+        batcher = MessageBatcher(mock_client, timeout=1.0)
+
+        # Valid new format message
+        valid_msg = {
+            "ts": "2025-10-14T10:30:00Z",
+            "sensor_id": "motion_01",
+            "sensor_type": "motion",
+            "zone_id": "lobby",
+            "value": {"detected": True},
+        }
+
+        msg_mock = MagicMock()
+        msg_mock.payload = json.dumps(valid_msg).encode()
+
+        batcher.on_message(mock_client, None, msg_mock)
+
+        # Should be in queue
+        assert not batcher.message_queue.empty()
+
+    def test_message_batcher_handles_invalid_messages(self):
+        """Test MessageBatcher logs but doesn't crash on invalid messages"""
+        mock_client = MagicMock()
+        batcher = MessageBatcher(mock_client, timeout=1.0)
+
+        # Invalid message missing required fields
+        invalid_msg = {"sensor_id": "temp_01"}  # Missing many required fields
+
+        msg_mock = MagicMock()
+        msg_mock.payload = json.dumps(invalid_msg).encode()
+
+        batcher.on_message(mock_client, None, msg_mock)
+
+        # Should still be in queue with validation_failed flag
+        queued_msg = batcher.message_queue.get()
+        assert queued_msg.get("validation_failed")

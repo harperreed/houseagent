@@ -120,13 +120,14 @@ class TestIntegration:
         mock_client = MagicMock()
         batcher = MessageBatcher(mock_client, timeout=60)
 
+        # Use valid SensorMessage format
         original_message = {
+            "ts": "2024-01-01T00:00:00Z",
             "sensor_id": "temp_001",
-            "location": {"room": "bedroom", "floor": 2},
-            "reading": {
-                "value": 72.5,
-                "unit": "F",
-                "timestamp": "2024-01-01T00:00:00Z",
+            "sensor_type": "temperature",
+            "zone_id": "bedroom",
+            "value": {
+                "fahrenheit": 72.5,
             },
         }
 
@@ -140,8 +141,15 @@ class TestIntegration:
         published_payload = mock_client.publish.call_args[0][1]
         batch_data = json.loads(published_payload)
 
-        # Verify original structure is preserved
-        assert batch_data["messages"][0] == original_message
+        # Verify validated message structure includes required fields
+        validated_msg = batch_data["messages"][0]
+        assert validated_msg["sensor_id"] == "temp_001"
+        assert validated_msg["sensor_type"] == "temperature"
+        assert validated_msg["zone_id"] == "bedroom"
+        assert validated_msg["value"]["fahrenheit"] == 72.5
+        # Validated messages get default values for optional fields
+        assert "site_id" in validated_msg
+        assert "floor" in validated_msg
 
     @patch("houseagent.agent_listener.HouseBot")
     def test_error_handling_in_pipeline(self, mock_house_bot):
