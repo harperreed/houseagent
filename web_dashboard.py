@@ -14,7 +14,7 @@ import structlog
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="web/templates", static_folder="web/static")
 logger = structlog.get_logger(__name__)
 
 # Thread-safe message buffer
