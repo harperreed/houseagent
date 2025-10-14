@@ -46,12 +46,19 @@ class SituationBuilder:
         zone_clusters = self._cluster_by_zone(messages)
 
         # Compute features
+        anomaly_scores = []
+        for m in messages:
+            value = m.get("value", {})
+            # Handle both dict and primitive value types
+            if isinstance(value, dict):
+                anomaly_scores.append(value.get("anomaly_score", 0))
+            else:
+                anomaly_scores.append(0)
+
         features = {
             "event_counts": dict(Counter([m.get("sensor_type") for m in messages])),
             "zones": list(zone_clusters.keys()),
-            "anomaly_scores": [
-                m.get("value", {}).get("anomaly_score", 0) for m in messages
-            ],
+            "anomaly_scores": anomaly_scores,
         }
 
         # Check for corroboration (2+ sensors)

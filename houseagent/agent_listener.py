@@ -2,6 +2,8 @@ import os
 import structlog
 from houseagent.house_bot import HouseBot
 from houseagent.semantic_memory import SemanticMemory
+from houseagent.situation_builder import SituationBuilder
+from houseagent.floor_plan import FloorPlanModel
 import json
 from collections import deque
 
@@ -40,33 +42,58 @@ class AgentListener:
                 f"Initialized AgentListener with history size: {history_size}"
             )
 
+        # Situation building
+        self.situation_builder = SituationBuilder()
+        floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
+        self.floor_plan = FloorPlanModel.load(floor_plan_path)
+        self.last_situation = None
+
     def on_message(self, client, userdata, msg):
         try:
-            message = json.loads(msg.payload)
-            self.logger.debug(f"Received message: {message}")
+            batch = json.loads(msg.payload)
+            self.logger.debug(f"Received message: {batch}")
         except json.JSONDecodeError:
             self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
 
-        output = {"messages": message}
-        json_output = json.dumps(output)
+        # Extract messages from batch
+        # Support both {"messages": [...]} format and direct message
+        if "messages" in batch:
+            messages = batch["messages"]
+        else:
+            # Legacy format - treat entire payload as single message wrapped in array
+            messages = [batch]
 
-        # Log the sent batched messages at INFO level
-        self.logger.info(f"Sent batched messages: {json_output}")
+        # Build situation from message batch
+        situation = self.situation_builder.build(messages, self.floor_plan)
+
+        # Prepare the content to process (either situation or fallback to messages)
+        if situation and situation.requires_response():
+            # Convert situation to JSON for prompt
+            content_json = json.dumps(situation.to_prompt_json())
+            self.logger.info(f"Built situation: {content_json}")
+            self.last_situation = situation
+        else:
+            # Fallback to legacy behavior for single messages or when no situation built
+            output = {"messages": batch}
+            content_json = json.dumps(output)
+            self.logger.debug(
+                f"No valid situation built from {len(messages)} messages, using fallback"
+            )
 
         # Add to semantic memory
         if self.semantic_memory:
-            self.semantic_memory.add_message(message, role="user")
+            self.semantic_memory.add_message(content_json, role="user")
 
-        # Add current message to rolling window history
-        self.message_history.append({"role": "user", "content": json_output})
+        # Add current content to rolling window history
+        self.message_history.append({"role": "user", "content": content_json})
 
         # Get semantic context if enabled
         semantic_context = []
         if self.semantic_memory:
             # Search for relevant recent messages
             semantic_results = self.semantic_memory.search(
-                query=json_output, n_results=3
+                query=content_json, n_results=3
             )
             semantic_context = [
                 f"[Recent context: {r['content']}]" for r in semantic_results
@@ -85,16 +112,21 @@ class AgentListener:
                 "content": "Relevant recent history: " + " ".join(semantic_context),
             }
             # Insert before the last user message (the current one)
-            # enhanced_history has: [...older messages..., current_user_message]
-            # We want: [...older messages..., context_message, current_user_message]
             if len(enhanced_history) > 0:
                 enhanced_history.insert(-1, context_message)
 
-        # Generate response with full message history + semantic context
-        response = self.house_bot.generate_response(
-            json_output, self.last_batch_messages, enhanced_history
+        # Generate response
+        last_content_json = (
+            json.dumps(self.last_situation.to_prompt_json())
+            if self.last_situation
+            else self.last_batch_messages
         )
-        self.last_batch_messages = json_output
+        response = self.house_bot.generate_response(
+            content_json, last_content_json, enhanced_history
+        )
+
+        # Track last batch
+        self.last_batch_messages = content_json
 
         # Add assistant response to both histories
         self.message_history.append({"role": "assistant", "content": response})

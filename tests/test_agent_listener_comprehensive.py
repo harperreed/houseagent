@@ -217,3 +217,43 @@ class TestAgentListenerComprehensive:
         # Should raise exception (not caught in current implementation)
         with pytest.raises(Exception):
             listener.on_message(mock_client, None, msg)
+
+    @patch("houseagent.agent_listener.HouseBot")
+    def test_agent_listener_builds_situations(self, mock_house_bot):
+        """Test AgentListener uses SituationBuilder for batch processing"""
+        mock_house_bot_instance = MagicMock()
+        mock_house_bot.return_value = mock_house_bot_instance
+        mock_house_bot_instance.generate_response.return_value = "AI Response"
+
+        mock_client = MagicMock()
+        listener = AgentListener(mock_client)
+
+        batch_msg = {
+            "messages": [
+                {
+                    "ts": "2025-10-14T10:30:00Z",
+                    "sensor_id": "motion_01",
+                    "sensor_type": "motion",
+                    "zone_id": "lobby",
+                    "value": {"detected": True},
+                },
+                {
+                    "ts": "2025-10-14T10:30:05Z",
+                    "sensor_id": "temp_01",
+                    "sensor_type": "temperature",
+                    "zone_id": "lobby",
+                    "value": {"celsius": 22.0},
+                },
+            ]
+        }
+
+        msg_mock = MagicMock()
+        msg_mock.payload = json.dumps(batch_msg).encode()
+
+        listener.on_message(mock_client, None, msg_mock)
+
+        # Verify HouseBot was called with situation
+        assert mock_house_bot_instance.generate_response.called
+        call_args = mock_house_bot_instance.generate_response.call_args[0]
+        # First arg should be situation JSON with zones and features
+        assert "zones" in call_args[0]
