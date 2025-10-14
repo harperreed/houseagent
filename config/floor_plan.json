@@ -70,12 +70,55 @@
         "server_it": ["entryway", "living_room", "work_area"]
     },
     "cameras": [
-        { "id": 1, "zone": "living_room", "position": [12, 2] },
-        { "id": 2, "zone": "kitchen_eating", "position": [28, 6] },
-        { "id": 3, "zone": "hack_area", "position": [42, 3] },
-        { "id": 4, "zone": "hack_area", "position": [48, 14] },
-        { "id": 5, "zone": "work_area", "position": [17, 28] },
-        { "id": 6, "zone": "server_it", "position": [2, 12] }
+        {
+            "id": "front_entrance",
+            "name": "Front Entrance Cam",
+            "zone": "entryway",
+            "rtsp": "rtsp://192.168.23.1:7447/8bdla3QKzATR4X0z",
+            "position": [5, 0]
+        },
+        {
+            "id": "den",
+            "name": "Den",
+            "zone": "living_room",
+            "rtsp": "rtsp://192.168.23.1:7447/PMLr67G4yT9nxzZr",
+            "position": [12, 2]
+        },
+        {
+            "id": "entry",
+            "name": "Entry",
+            "zone": "server_it",
+            "rtsp": "rtsp://192.168.23.1:7447/nm6GlG0IuifgLMh5",
+            "position": [2, 12]
+        },
+        {
+            "id": "hack_area",
+            "name": "Hack Area",
+            "zone": "hack_area",
+            "rtsp": "rtsp://192.168.23.1:7447/SxMZ8GQm60UUn7ZE",
+            "position": [42, 8]
+        },
+        {
+            "id": "kitchen",
+            "name": "Kitchen",
+            "zone": "kitchen_eating",
+            "rtsp": "rtsp://192.168.23.1:7447/96E79IofgsVEVgrx",
+            "position": [28, 10]
+        },
+        {
+            "id": "middle",
+            "name": "Middle",
+            "zone": "living_room",
+            "rtsp": "rtsp://192.168.23.1:7447/1kPFJkQpKJCnsnnU",
+            "position": [18, 8]
+        },
+        {
+            "id": "work_area",
+            "name": "Work Area",
+            "zone": "work_area",
+            "rtsp": "rtsp://192.168.23.1:7447/VIJmtkUlytR7I15I",
+            "position": [25, 22]
+        }
     ],
     "sensors": {
         "air_quality": [

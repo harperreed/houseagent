@@ -7,6 +7,7 @@ import re
 from openai import OpenAI
 from houseagent.tools.router import ToolRouter, ToolRequest
 from houseagent.tools.floor_plan_tool import FloorPlanTool
+from houseagent.tools.camera_tool import CameraTool
 from houseagent.floor_plan import FloorPlanModel
 
 
@@ -42,8 +43,9 @@ class HouseBot:
 
         # Register tools
         floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
-        floor_plan = FloorPlanModel.load(floor_plan_path)
-        self.tool_router.tools["floor_plan_query"] = FloorPlanTool(floor_plan)
+        self.floor_plan = FloorPlanModel.load(floor_plan_path)
+        self.tool_router.tools["floor_plan_query"] = FloorPlanTool(self.floor_plan)
+        self.tool_router.tools["get_camera_snapshot"] = CameraTool(self.floor_plan)
 
     def strip_emojis(self, text):
         RE_EMOJI = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
@@ -89,9 +91,17 @@ class HouseBot:
             self.synthesis_model if severity > 0.7 else self.classifier_model
         )
 
-        # Format the system prompt with default state
+        # Format the system prompt with floor plan context instead of default_state
+        floor_plan_context = {
+            "zones": list(self.floor_plan.zones.keys()),
+            "total_zones": len(self.floor_plan.zones),
+            "floors": list(
+                set(z.get("floor", 1) for z in self.floor_plan.zones.values())
+            ),
+            "cameras": len(self.floor_plan.cameras),
+        }
         system_prompt = self.system_prompt_template.format(
-            default_state=json.dumps(self.default_state, separators=(",", ":"))
+            default_state=json.dumps(floor_plan_context, separators=(",", ":"))
         )
 
         # Build messages array

@@ -15,7 +15,8 @@ er, is from hawaii), Ivan (loves building, hacking, and karate!), Sophie (Loves 
 * Don't over do it by mentioning every detail of their lives.
 * The office is about 3600 sq ft
 * The occupants love to be here
-* Be concise, and short in your response. One line short line MAX.
+* Be concise, and short in your response. No run on sentences.
+* One line short line MAX.
 
 Remember to check your work.
 The default state is:
