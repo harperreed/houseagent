@@ -292,3 +292,75 @@ class TestHouseBotComprehensive:
 
         # Verify tool was executed
         assert bot.tool_router.execute.called
+
+    @patch("builtins.open", new_callable=mock_open, read_data="test")
+    @patch("houseagent.house_bot.OpenAI")
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_house_bot_selects_model_by_severity(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
+        """Test HouseBot uses different models based on situation severity"""
+
+        mock_file.return_value.read.side_effect = [
+            "sys {default_state}",
+            "human {current_state} {last_state}",
+            "{}",
+        ]
+
+        mock_client = MagicMock()
+        mock_openai.return_value = mock_client
+
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "Response"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        bot = HouseBot()
+        bot.classifier_model = "gpt-3.5-turbo"
+        bot.synthesis_model = "gpt-4"
+
+        # High severity situation
+        high_severity_state = {
+            "confidence": 0.9,
+            "anomaly_scores": [3.5, 4.2],
+            "zones": ["lobby", "conf_a"],  # Multiple zones to push severity > 0.7
+        }
+
+        bot.generate_response(high_severity_state, None)
+
+        # Check that gpt-4 was used
+        call_kwargs = bot.client.chat.completions.create.call_args[1]
+        assert call_kwargs["model"] == "gpt-4"
+
+    @patch("builtins.open", new_callable=mock_open, read_data="test")
+    @patch("houseagent.house_bot.OpenAI")
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_house_bot_uses_cheap_model_for_low_severity(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
+        """Test HouseBot uses gpt-3.5 for routine situations"""
+
+        mock_file.return_value.read.side_effect = [
+            "sys {default_state}",
+            "human {current_state} {last_state}",
+            "{}",
+        ]
+
+        mock_client = MagicMock()
+        mock_openai.return_value = mock_client
+
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "Response"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        bot = HouseBot()
+        bot.classifier_model = "gpt-3.5-turbo"
+        bot.synthesis_model = "gpt-4"
+
+        # Low severity situation
+        low_severity_state = {"confidence": 0.3, "zones": ["lobby"]}
+
+        bot.generate_response(low_severity_state, None)
+
+        # Check that gpt-3.5 was used
+        call_kwargs = bot.client.chat.completions.create.call_args[1]
+        assert call_kwargs["model"] == "gpt-3.5-turbo"

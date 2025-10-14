@@ -33,6 +33,10 @@ class HouseBot:
         self.model = openai_model
         self.temperature = openai_temperature
 
+        # Multi-model configuration
+        self.classifier_model = "gpt-3.5-turbo"
+        self.synthesis_model = os.getenv("OPENAI_MODEL", "gpt-4")
+
         # Initialize tool framework
         self.tool_router = ToolRouter()
 
@@ -45,8 +49,45 @@ class HouseBot:
         RE_EMOJI = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
         return RE_EMOJI.sub(r"", text)
 
+    def _classify_severity(self, state):
+        """Classify situation severity (0-1)"""
+        severity = 0.0
+
+        # Handle state as dict or string
+        if isinstance(state, str):
+            try:
+                state = json.loads(state)
+            except (json.JSONDecodeError, TypeError):
+                return 0.0
+
+        if not isinstance(state, dict):
+            return 0.0
+
+        # High confidence situations
+        if state.get("confidence", 0) > 0.8:
+            severity += 0.3
+
+        # Anomaly detection
+        anomaly_scores = state.get("anomaly_scores", [])
+        if any(score > 2.5 for score in anomaly_scores):
+            severity += 0.4
+
+        # Multiple zones
+        if len(state.get("zones", [])) > 1:
+            severity += 0.2
+
+        return min(severity, 1.0)
+
     def generate_response(self, current_state, last_state, message_history=None):
         self.logger.debug("let's make a request")
+
+        # Classify situation severity
+        severity = self._classify_severity(current_state)
+
+        # Select model based on severity
+        selected_model = (
+            self.synthesis_model if severity > 0.7 else self.classifier_model
+        )
 
         # Format the system prompt with default state
         system_prompt = self.system_prompt_template.format(
@@ -75,6 +116,15 @@ class HouseBot:
             )
             messages.append({"role": "user", "content": human_prompt})
 
+        # Add structured output request for high severity
+        if severity > 0.7:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": "Respond with both text AND JSON: {severity, tags, actions}",
+                }
+            )
+
         # Execute tools if requested
         tool_request = None
         if isinstance(current_state, dict):
@@ -95,9 +145,9 @@ class HouseBot:
                 }
             )
 
-        # Make the OpenAI API call directly
+        # Use selected model
         response = self.client.chat.completions.create(
-            model=self.model,
+            model=selected_model,
             messages=messages,
         )
 
