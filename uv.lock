@@ -450,6 +450,7 @@ dependencies = [
     { name = "chromadb" },
     { name = "openai" },
     { name = "paho-mqtt" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "structlog" },
 ]
@@ -465,6 +466,7 @@ requires-dist = [
     { name = "chromadb", specifier = ">=1.1.0" },
     { name = "openai", specifier = ">=1.52.2" },
     { name = "paho-mqtt", specifier = ">=2.1.0" },
+    { name = "pydantic", specifier = ">=2.9.2" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "structlog", specifier = ">=24.4.0" },
 ]
