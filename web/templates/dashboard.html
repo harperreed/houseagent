@@ -41,6 +41,17 @@
                 <h2>All Events</h2>
                 <div id="all-events" class="message-list"></div>
             </div>
+
+            <!-- Camera Snapshots -->
+            <div class="panel camera-panel">
+                <div class="panel-header">
+                    <h2>📷 Camera Snapshots</h2>
+                    <button id="refresh-all-btn" class="action-btn">Refresh All</button>
+                </div>
+                <div id="camera-grid" class="camera-grid">
+                    <!-- Cameras will be populated here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -54,6 +65,7 @@
         const messageCount = document.getElementById('message-count');
 
         let totalMessages = 0;
+        const cameraStates = new Map(); // Track latest snapshot per camera
 
         // Connect to SSE stream
         const eventSource = new EventSource('/stream');
@@ -74,7 +86,11 @@
             messageCount.textContent = `${totalMessages} messages`;
 
             // Add to appropriate panel
-            addMessage(data);
+            if (data.type === 'camera') {
+                updateCameraSnapshot(data);
+            } else {
+                addMessage(data);
+            }
 
             // Add to all events
             addToAllEvents(data);
@@ -189,6 +205,102 @@
                     addToAllEvents(msg);
                 });
             });
+
+        // Camera panel functions
+        function updateCameraSnapshot(data) {
+            const cameraId = data.payload.entity_id.replace('camera.', '');
+            const attrs = data.payload.attributes;
+
+            cameraStates.set(cameraId, {
+                image: attrs.image_base64,
+                analysis: attrs.vision_analysis,
+                zone: attrs.zone,
+                name: attrs.camera_name,
+                timestamp: attrs.timestamp
+            });
+
+            renderCamera(cameraId);
+        }
+
+        function renderCamera(cameraId) {
+            const state = cameraStates.get(cameraId);
+            if (!state) return;
+
+            let cameraDiv = document.getElementById(`camera-${cameraId}`);
+            if (!cameraDiv) {
+                // Create new camera card
+                const grid = document.getElementById('camera-grid');
+                cameraDiv = document.createElement('div');
+                cameraDiv.id = `camera-${cameraId}`;
+                cameraDiv.className = 'camera-card';
+                grid.appendChild(cameraDiv);
+            }
+
+            const age = Date.now() - new Date(state.timestamp).getTime();
+            const ageSeconds = Math.floor(age / 1000);
+            const stale = ageSeconds > 120 ? 'stale' : '';
+
+            cameraDiv.innerHTML = `
+                <div class="camera-header">
+                    <span class="camera-name">${state.name}</span>
+                    <span class="camera-zone">${state.zone}</span>
+                </div>
+                <img src="${state.image}" alt="${state.name}" class="camera-image ${stale}">
+                <div class="camera-analysis">${state.analysis}</div>
+                <div class="camera-footer">
+                    <span class="camera-timestamp">${ageSeconds}s ago</span>
+                    <button class="capture-btn" data-camera-id="${cameraId}" data-zone="${state.zone}">
+                        Capture Now
+                    </button>
+                </div>
+            `;
+        }
+
+        // Auto-refresh all cameras every 60 seconds
+        setInterval(() => {
+            fetch('/api/camera/refresh_all', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => console.log('Auto-refresh:', data.requested, 'cameras'))
+                .catch(err => console.error('Auto-refresh failed:', err));
+        }, 60000);
+
+        // Manual refresh all button
+        document.getElementById('refresh-all-btn').addEventListener('click', () => {
+            fetch('/api/camera/refresh_all', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Manual refresh:', data.requested, 'cameras');
+                    document.getElementById('refresh-all-btn').textContent = 'Refreshing...';
+                    setTimeout(() => {
+                        document.getElementById('refresh-all-btn').textContent = 'Refresh All';
+                    }, 2000);
+                });
+        });
+
+        // Per-camera capture button handler (event delegation)
+        document.getElementById('camera-grid').addEventListener('click', (e) => {
+            if (e.target.classList.contains('capture-btn')) {
+                const cameraId = e.target.dataset.cameraId;
+                const zone = e.target.dataset.zone;
+
+                e.target.textContent = 'Capturing...';
+                e.target.disabled = true;
+
+                fetch('/api/camera/capture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ camera_id: cameraId, zone: zone })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Capture triggered:', cameraId);
+                    setTimeout(() => {
+                        e.target.textContent = 'Capture Now';
+                        e.target.disabled = false;
+                    }, 5000); // 5 second cooldown
+                });
+            }
+        });
     </script>
 </body>
 </html>
