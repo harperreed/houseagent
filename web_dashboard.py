@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from collections import deque
 from threading import Lock
-from flask import Flask, render_template, Response, jsonify
+from flask import Flask, render_template, Response, jsonify, request
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 import structlog
@@ -36,7 +36,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
     # Subscribe to batched messages
     client.subscribe(os.getenv("MESSAGE_BUNDLE_TOPIC", "houseevents/ai/bundle/publish"))
 
-    logger.info("Dashboard subscribed to all topics")
+    # Subscribe to camera events
+    client.subscribe("office/+/+/+/camera/+")
+
+    logger.info("Dashboard subscribed to all topics including cameras")
 
 
 def on_message(client, userdata, msg):
@@ -64,6 +67,8 @@ def classify_message_type(topic, payload):
         return "ai_response"
     elif "bundle" in topic:
         return "situation"
+    elif "/camera/" in topic:
+        return "camera"
     elif "office/" in topic:
         return "office_sensor"
     else:
@@ -86,6 +91,12 @@ broker = os.getenv("MQTT_BROKER_ADDRESS", "localhost")
 port = int(os.getenv("MQTT_PORT", 1883))
 mqtt_client.connect(broker, port, 60)
 mqtt_client.loop_start()
+
+# Load floor plan for camera configuration
+floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
+with open(floor_plan_path) as f:
+    floor_plan_data = json.load(f)
+    app.config["CAMERAS"] = floor_plan_data.get("cameras", [])
 
 
 @app.route("/")
@@ -120,6 +131,58 @@ def stream():
             time.sleep(0.5)  # Check for new messages every 500ms
 
     return Response(event_stream(), mimetype="text/event-stream")
+
+
+@app.route("/api/camera/capture", methods=["POST"])
+def camera_capture():
+    """Trigger camera capture via MQTT request"""
+    data = request.get_json()
+    camera_id = data.get("camera_id")
+    zone = data.get("zone")
+
+    if not camera_id:
+        return jsonify({"success": False, "error": "camera_id required"}), 400
+
+    request_payload = {
+        "camera_id": camera_id,
+        "zone": zone,
+        "timestamp": datetime.now().isoformat(),
+        "source": "dashboard",
+    }
+
+    try:
+        mqtt_client.publish("houseevents/camera/request", json.dumps(request_payload))
+        logger.info("Camera capture requested", camera_id=camera_id)
+        return jsonify({"success": True, "camera_id": camera_id})
+    except Exception as e:
+        logger.error("Failed to publish camera request", error=str(e))
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/camera/refresh_all", methods=["POST"])
+def camera_refresh_all():
+    """Trigger capture for all cameras"""
+    cameras = app.config.get("CAMERAS", [])
+    count = 0
+
+    for camera in cameras:
+        request_payload = {
+            "camera_id": camera["id"],
+            "zone": camera.get("zone"),
+            "timestamp": datetime.now().isoformat(),
+            "source": "dashboard_auto",
+        }
+        try:
+            mqtt_client.publish(
+                "houseevents/camera/request", json.dumps(request_payload)
+            )
+            count += 1
+        except Exception as e:
+            logger.error(
+                "Failed to publish camera request", camera_id=camera["id"], error=str(e)
+            )
+
+    return jsonify({"success": True, "requested": count})
 
 
 @app.route("/api/status")
