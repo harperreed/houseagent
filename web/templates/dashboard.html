@@ -204,7 +204,8 @@
                     addMessage(msg);
                     addToAllEvents(msg);
                 });
-            });
+            })
+            .catch(err => console.error('Failed to load initial messages:', err));
 
         // Camera panel functions
         function updateCameraSnapshot(data) {
@@ -242,19 +243,51 @@
 
             cameraDiv.innerHTML = `
                 <div class="camera-header">
-                    <span class="camera-name">${state.name}</span>
-                    <span class="camera-zone">${state.zone}</span>
+                    <span class="camera-name">${escapeHtml(state.name)}</span>
+                    <span class="camera-zone">${escapeHtml(state.zone)}</span>
                 </div>
-                <img src="${state.image}" alt="${state.name}" class="camera-image ${stale}">
-                <div class="camera-analysis">${state.analysis}</div>
+                <img src="${state.image}" alt="${escapeHtml(state.name)}" class="camera-image ${stale}">
+                <div class="camera-analysis">${escapeHtml(state.analysis)}</div>
                 <div class="camera-footer">
-                    <span class="camera-timestamp">${ageSeconds}s ago</span>
-                    <button class="capture-btn" data-camera-id="${cameraId}" data-zone="${state.zone}">
+                    <span class="camera-timestamp" data-timestamp="${state.timestamp}">${ageSeconds}s ago</span>
+                    <button class="capture-btn" data-camera-id="${cameraId}" data-zone="${escapeHtml(state.zone)}">
                         Capture Now
                     </button>
                 </div>
             `;
         }
+
+        // Update camera timestamps every 10 seconds
+        function updateCameraTimestamps() {
+            const timestampElements = document.querySelectorAll('.camera-timestamp');
+            timestampElements.forEach(elem => {
+                const timestamp = elem.dataset.timestamp;
+                if (timestamp) {
+                    const age = Date.now() - new Date(timestamp).getTime();
+                    const ageSeconds = Math.floor(age / 1000);
+                    elem.textContent = `${ageSeconds}s ago`;
+
+                    // Update image stale status
+                    const cameraCard = elem.closest('.camera-card');
+                    const img = cameraCard.querySelector('.camera-image');
+                    if (img) {
+                        if (ageSeconds > 120) {
+                            img.classList.add('stale');
+                        } else {
+                            img.classList.remove('stale');
+                        }
+                    }
+                }
+            });
+        }
+
+        setInterval(updateCameraTimestamps, 10000);
+
+        // Load initial camera states on page load
+        fetch('/api/camera/refresh_all', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => console.log('Initial camera load:', data.requested, 'cameras'))
+            .catch(err => console.error('Initial camera load failed:', err));
 
         // Auto-refresh all cameras every 60 seconds
         setInterval(() => {
@@ -274,7 +307,8 @@
                     setTimeout(() => {
                         document.getElementById('refresh-all-btn').textContent = 'Refresh All';
                     }, 2000);
-                });
+                })
+                .catch(err => console.error('Manual refresh failed:', err));
         });
 
         // Per-camera capture button handler (event delegation)
@@ -298,6 +332,11 @@
                         e.target.textContent = 'Capture Now';
                         e.target.disabled = false;
                     }, 5000); // 5 second cooldown
+                })
+                .catch(err => {
+                    console.error('Capture failed:', err);
+                    e.target.textContent = 'Capture Now';
+                    e.target.disabled = false;
                 });
             }
         });
