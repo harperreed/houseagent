@@ -319,3 +319,73 @@ class TestMessageBatcherComprehensive:
         # Should still be in queue with validation_failed flag
         queued_msg = batcher.message_queue.get()
         assert queued_msg.get("validation_failed")
+
+    def test_message_batcher_filters_noise(self):
+        """Test MessageBatcher uses NoiseFilter to suppress duplicates"""
+        mock_client = MagicMock()
+        batcher = MessageBatcher(mock_client, timeout=1.0)
+
+        # Send same message twice
+        msg_data = {
+            "ts": "2025-10-14T10:30:00Z",
+            "sensor_id": "temp_01",
+            "sensor_type": "temperature",
+            "zone_id": "lobby",
+            "value": {"celsius": 22.0},
+        }
+
+        msg_mock1 = MagicMock()
+        msg_mock1.payload = json.dumps(msg_data).encode()
+
+        msg_mock2 = MagicMock()
+        msg_mock2.payload = json.dumps(msg_data).encode()
+
+        batcher.on_message(mock_client, None, msg_mock1)
+        batcher.on_message(mock_client, None, msg_mock2)
+
+        # Only first message should be queued
+        assert batcher.message_queue.qsize() == 1
+
+    def test_message_batcher_adds_anomaly_scores(self):
+        """Test MessageBatcher adds anomaly scores to detected anomalies"""
+        mock_client = MagicMock()
+        batcher = MessageBatcher(mock_client, timeout=1.0)
+
+        # Build baseline
+        for temp in [20.0, 21.0, 20.5]:
+            msg = MagicMock()
+            msg.payload = json.dumps(
+                {
+                    "ts": "2025-10-14T10:30:00Z",
+                    "sensor_id": "temp_01",
+                    "sensor_type": "temperature",
+                    "zone_id": "lobby",
+                    "value": {"celsius": temp},
+                }
+            ).encode()
+            batcher.on_message(mock_client, None, msg)
+
+        # Send anomaly
+        anomaly_msg = MagicMock()
+        anomaly_msg.payload = json.dumps(
+            {
+                "ts": "2025-10-14T10:35:00Z",
+                "sensor_id": "temp_01",
+                "sensor_type": "temperature",
+                "zone_id": "lobby",
+                "value": {"celsius": 45.0},
+            }
+        ).encode()
+
+        batcher.on_message(mock_client, None, anomaly_msg)
+
+        # Find anomaly message in queue
+        found_anomaly = False
+        while not batcher.message_queue.empty():
+            msg = batcher.message_queue.get()
+            if msg.get("value", {}).get("celsius") == 45.0:
+                assert "anomaly_score" in msg["value"]
+                assert msg["value"]["anomaly_score"] > 2.0
+                found_anomaly = True
+
+        assert found_anomaly

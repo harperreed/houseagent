@@ -5,6 +5,8 @@ import structlog
 import os
 from houseagent.schemas import SensorMessage, LegacyMessage
 from pydantic import ValidationError
+from houseagent.noise_filter import NoiseFilter
+from houseagent.anomaly_detector import AnomalyDetector
 
 
 class MessageBatcher:
@@ -23,6 +25,10 @@ class MessageBatcher:
         # Schema validation
         self.zone_map = {}  # TODO: Load from config
 
+        # Add filtering components
+        self.noise_filter = NoiseFilter()
+        self.anomaly_detector = AnomalyDetector()
+
     def on_message(self, client, userdata, msg):
         try:
             message = json.loads(msg.payload)
@@ -31,10 +37,10 @@ class MessageBatcher:
             self.logger.error(f"Error decoding JSON: {msg.payload}")
             return
 
-        # Try to validate as SensorMessage
+        # Validate message
+        sensor_msg = None
         try:
-            validated = SensorMessage(**message)
-            message = validated.model_dump()
+            sensor_msg = SensorMessage(**message)
         except ValidationError as sensor_error:
             # Try legacy format only if it has legacy fields (sensor, room, value)
             has_legacy_fields = any(
@@ -44,13 +50,13 @@ class MessageBatcher:
                 try:
                     # Validate as legacy message first
                     _ = LegacyMessage(**message)
-                    validated = SensorMessage.from_legacy(message, self.zone_map)
-                    message = validated.model_dump()
+                    sensor_msg = SensorMessage.from_legacy(message, self.zone_map)
                 except ValidationError as e:
                     self.logger.warning(
                         "message.validation_failed", error=str(e), payload=message
                     )
                     message["validation_failed"] = True
+                    sensor_msg = None
             else:
                 # Not legacy format, mark as validation failed
                 self.logger.warning(
@@ -59,6 +65,27 @@ class MessageBatcher:
                     payload=message,
                 )
                 message["validation_failed"] = True
+                sensor_msg = None
+
+        # Apply filtering if we have valid sensor message
+        if sensor_msg:
+            if self.noise_filter.should_suppress(sensor_msg):
+                self.logger.debug(
+                    "message.suppressed",
+                    sensor_id=sensor_msg.sensor_id,
+                    reason="noise_filter",
+                )
+                return
+
+            if self.anomaly_detector.is_anomalous(sensor_msg):
+                self.logger.info(
+                    "message.anomaly_detected",
+                    sensor_id=sensor_msg.sensor_id,
+                    score=self.anomaly_detector.score,
+                )
+                sensor_msg.value["anomaly_score"] = self.anomaly_detector.score
+
+            message = sensor_msg.model_dump()
 
         self.last_received_timestamp = time.time()
         self.message_queue.put(message)
