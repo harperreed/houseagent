@@ -1,0 +1,42 @@
+alias: "AI: State Router (1 minutes)"
+description: ""
+triggers:
+  - entity_id:
+      - binary_sensor.listening_area_presence
+      - binary_sensor.ivans_desk_presence
+      - binary_sensor.harpers_desk_presence
+      - binary_sensor.stereo_presence
+      - binary_sensor.tool_area_presence
+      - binary_sensor.morning
+      - binary_sensor.lunch_time
+      - binary_sensor.afternoon
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+    trigger: state
+conditions:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.occupied
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.ai_talking
+        state: "on"
+actions:
+  - data:
+      qos: 0
+      retain: false
+      topic: hassevents/notifications
+      payload: |
+        {
+          "entity_id": "{{ trigger.entity_id }}",
+          "from_state": "{{ trigger.from_state.state }}",
+          "to_state": "{{ trigger.to_state.state }}",
+          "area": "{{ area_id(trigger.entity_id) }}",
+          "attributes": {{ trigger.to_state.attributes | tojson }},
+          "timestamp": "{{ now().isoformat() }}"
+        }
+    action: mqtt.publish
+mode: single

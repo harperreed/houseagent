@@ -78,8 +78,12 @@ class TestIntegration:
         mock_house_bot_instance.generate_response.assert_called_once()
 
         # Verify response was published
+        # Uses NOTIFICATION_TOPIC env var (defaults to "your/input/topic/here")
+        import os
+
+        expected_topic = os.getenv("NOTIFICATION_TOPIC", "your/input/topic/here")
         mock_client.publish.assert_called_once_with(
-            "your/input/topic/here",  # default topic
+            expected_topic,
             "AI generated response",
         )
 

@@ -26,16 +26,16 @@ class HouseBot:
         with open(f"{prompt_dir}/{default_state_filename}", "r") as f:
             self.default_state = f.read()
 
-        openai_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+        openai_model = os.getenv("OPENAI_MODEL", "gpt-5")
         openai_temperature = float(os.getenv("OPENAI_TEMPERATURE", "0"))
 
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = openai_model
         self.temperature = openai_temperature
 
-        # Multi-model configuration
-        self.classifier_model = "gpt-3.5-turbo"
-        self.synthesis_model = os.getenv("OPENAI_MODEL", "gpt-4")
+        # Multi-model configuration (GPT-5 models)
+        self.classifier_model = os.getenv("CLASSIFIER_MODEL", "gpt-5-mini")
+        self.synthesis_model = os.getenv("SYNTHESIS_MODEL", "gpt-5")
 
         # Initialize tool framework
         self.tool_router = ToolRouter()

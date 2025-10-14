@@ -95,14 +95,15 @@ Legacy format still supported (auto-converted).
 
 ### Configuration
 
-See `config/production.env.example` for all configuration options.
+See `.env.example` for all configuration options.
 
 Key settings:
 - `OFFICE_MODE=true` - Enable office sensor processing
 - `ENABLE_TOOLS=true` - Enable tool execution
 - `ANOMALY_Z_THRESHOLD=2.5` - Z-score threshold for anomalies
-- `CLASSIFIER_MODEL=gpt-3.5-turbo` - Fast model for routine events
-- `OPENAI_MODEL=gpt-4` - Premium model for high-severity situations
+- `CLASSIFIER_MODEL=gpt-5-mini` - Fast GPT-5 model for routine events
+- `SYNTHESIS_MODEL=gpt-5` - Premium GPT-5 model for high-severity situations
+- `OPENAI_MODEL=gpt-5` - Default model (can use gpt-5, gpt-5-pro, gpt-5-codex)
 
 ### Testing
 

@@ -14,12 +14,13 @@ load_dotenv()
 logger = structlog.get_logger(__name__)
 
 
-def on_connect(client, userdata, flags, rc):
-    logger.info("Connected to MQTT broker")
+def on_connect(client, userdata, flags, reason_code, properties):
+    """Handle MQTT connection (VERSION2 callback)"""
+    logger.info("Connected to MQTT broker", reason_code=reason_code)
     topic = os.getenv("MESSAGE_BUNDLE_TOPIC", "your/input/topic/here")
     logger.debug(f"Subscribing to topic: {topic}")
     client.subscribe(topic)
-    logger.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
+    logger.info(f"Connected. Subscribed to topic: {topic}")
 
 
 def on_message(client, userdata, msg):
@@ -28,24 +29,44 @@ def on_message(client, userdata, msg):
     agent_client.on_message(client, userdata, msg)
 
 
-def on_disconnect(client, userdata, rc):
-    logger.info("Disconnected from MQTT broker")
-    if rc != 0:
-        logger.error(f"Unexpected disconnection. Result code: {rc}")
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    """Handle MQTT disconnection (VERSION2 callback)"""
+    logger.info("mqtt.disconnected", reason_code=reason_code)
+    if reason_code != 0:
+        logger.error("mqtt.unexpected_disconnect", reason_code=reason_code)
+        # Library handles automatic reconnection via reconnect_delay_set()
 
 
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, "agent")
+# Use configurable client ID to prevent collisions
+client_id = os.getenv("MQTT_AGENT_CLIENT_ID", "housebot-agent")
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
 
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_disconnect = on_disconnect
 
+# Enable automatic reconnection with exponential backoff
+client.reconnect_delay_set(min_delay=1, max_delay=120)
+
+# Set up authentication if credentials are provided
+mqtt_username = os.getenv("MQTT_USERNAME")
+mqtt_password = os.getenv("MQTT_PASSWORD")
+if mqtt_username and mqtt_password:
+    client.username_pw_set(mqtt_username, mqtt_password)
+    logger.info("mqtt.auth_configured", username=mqtt_username)
+
 broker_address = os.getenv("MQTT_BROKER_ADDRESS", "localhost")
 port_number = int(os.getenv("MQTT_PORT", 1883))
 keep_alive_interval = int(os.getenv("MQTT_KEEP_ALIVE_INTERVAL", 60))
 
+logger.info(
+    "mqtt.connecting",
+    broker=broker_address,
+    port=port_number,
+    keepalive=keep_alive_interval,
+)
 client.connect(broker_address, port_number, keep_alive_interval)
-logging.debug(f"Connected to MQTT broker at {broker_address}:{port_number}")
+logger.info("mqtt.connect_initiated")
 
 agent_client = AgentListener(client)
 

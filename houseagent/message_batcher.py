@@ -22,8 +22,13 @@ class MessageBatcher:
         self.client = client
         self.last_batch_messages = None
 
-        # Schema validation
-        self.zone_map = {}  # TODO: Load from config
+        # Schema validation - load zone mapping from config
+        zone_map_str = os.getenv("ZONE_MAP", "{}")
+        try:
+            self.zone_map = json.loads(zone_map_str)
+        except json.JSONDecodeError:
+            self.logger.warning("Failed to parse ZONE_MAP, using empty mapping")
+            self.zone_map = {}
 
         # Add filtering components
         self.noise_filter = NoiseFilter()
@@ -42,11 +47,12 @@ class MessageBatcher:
         try:
             sensor_msg = SensorMessage(**message)
         except ValidationError as sensor_error:
-            # Try legacy format only if it has legacy fields (sensor, room, value)
+            # Try legacy format if it has old legacy fields OR Home Assistant fields
             has_legacy_fields = any(
                 key in message for key in ["sensor", "room", "value"]
             )
-            if has_legacy_fields:
+            has_home_assistant_fields = "entity_id" in message
+            if has_legacy_fields or has_home_assistant_fields:
                 try:
                     # Validate as legacy message first
                     _ = LegacyMessage(**message)
@@ -77,15 +83,17 @@ class MessageBatcher:
                 )
                 return
 
+            # Convert to dict for modification
+            message = sensor_msg.model_dump()
+
             if self.anomaly_detector.is_anomalous(sensor_msg):
                 self.logger.info(
                     "message.anomaly_detected",
                     sensor_id=sensor_msg.sensor_id,
                     score=self.anomaly_detector.score,
                 )
-                sensor_msg.value["anomaly_score"] = self.anomaly_detector.score
-
-            message = sensor_msg.model_dump()
+                # Add anomaly score to the dict (not the Pydantic model)
+                message["value"]["anomaly_score"] = self.anomaly_detector.score
 
         self.last_received_timestamp = time.time()
         self.message_queue.put(message)

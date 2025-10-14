@@ -1,0 +1,52 @@
+alias: "AI: State Router (5 seconds)"
+description: ""
+triggers:
+  - entity_id:
+      - input_boolean.occupied
+      - person.harper
+      - lock.door_aa5a
+      - person.clint_ecker
+      - person.sophie_davis
+      - person.ivan_indrautama
+      - person.dylan_richard
+      - person.michael_sugimura
+      - binary_sensor.speaking_detected
+      - binary_sensor.fibaro_door_window_sensor_2_window_door_is_open
+      - binary_sensor.person_detected
+      - binary_sensor.q_sensor_1_motion_detection
+      - binary_sensor.q_sensor_2_motion_detection
+      - binary_sensor.q_sensor_3_motion_detection
+      - binary_sensor.q_sensor_4_motion_detection
+      - binary_sensor.q_sensor_5_motion_detection
+      - binary_sensor.q_sensor_6_motion_detection
+      - binary_sensor.is_dark
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+conditions:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.occupied
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.ai_talking
+        state: "on"
+actions:
+  - data:
+      qos: 0
+      retain: false
+      topic: hassevents/notifications
+      payload: |
+        {
+          "entity_id": "{{ trigger.entity_id }}",
+          "from_state": "{{ trigger.from_state.state }}",
+          "area": "{{ area_id(trigger.entity_id) }}",
+          "to_state": "{{ trigger.to_state.state }}",
+          "attributes": {{ trigger.to_state.attributes | tojson }},
+          "timestamp": "{{ now().isoformat() }}"
+        }
+    action: mqtt.publish
+mode: single

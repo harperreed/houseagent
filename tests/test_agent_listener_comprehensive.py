@@ -153,7 +153,8 @@ class TestAgentListenerComprehensive:
         call_args = mock_house_bot_instance.generate_response.call_args
         first_arg = json.loads(call_args[0][0])
         assert "messages" in first_arg
-        assert first_arg["messages"] == complex_data
+        # Single message gets wrapped in array per agent_listener.py line 65
+        assert first_arg["messages"] == [complex_data]
 
     @patch("houseagent.agent_listener.HouseBot")
     def test_stop_sets_flag(self, mock_house_bot):

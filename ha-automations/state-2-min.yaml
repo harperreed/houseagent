@@ -1,0 +1,34 @@
+alias: "AI: State Router (2 minutes)"
+description: ""
+triggers:
+  - entity_id:
+      - meshtastic.gateway_2389_channel_longfast
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+    trigger: state
+conditions:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.occupied
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.ai_talking
+        state: "on"
+actions:
+  - data:
+      qos: 0
+      retain: false
+      topic: hassevents/notifications
+      payload: |
+        {
+          "entity_id": "{{ trigger.entity_id }}",
+          "area": "{{ area_id(trigger.entity_id) }}",
+          "from_state": "{{ trigger.from_state.state }}",
+          "to_state": "{{ trigger.to_state.state }}",
+          "timestamp": "{{ now().isoformat() }}"
+        }
+    action: mqtt.publish
+mode: single

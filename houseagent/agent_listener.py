@@ -75,7 +75,7 @@ class AgentListener:
             self.last_situation = situation
         else:
             # Fallback to legacy behavior for single messages or when no situation built
-            output = {"messages": batch}
+            output = {"messages": messages}
             content_json = json.dumps(output)
             self.logger.debug(
                 f"No valid situation built from {len(messages)} messages, using fallback"

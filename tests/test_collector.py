@@ -18,8 +18,8 @@ def test_collector_subscribes_to_office_topics(mock_client_class, mock_batcher):
 
     client_mock = Mock()
 
-    # Call the on_connect function directly
-    collector.on_connect(client_mock, None, None, 0)
+    # Call the on_connect function directly (VERSION2 signature)
+    collector.on_connect(client_mock, None, None, 0, None)
 
     # Verify office pattern subscription
     calls = [call[0][0] for call in client_mock.subscribe.call_args_list]

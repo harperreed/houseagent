@@ -1,26 +1,98 @@
 {
-  "zones": {
-    "lobby": {
-      "name": "Main Lobby",
-      "floor": 1,
-      "polygon": [[0, 0], [10, 0], [10, 10], [0, 10]]
+    "zones": {
+        "entryway": {
+            "name": "Entryway",
+            "floor": 1,
+            "polygon": [
+                [0, 0],
+                [10, 0],
+                [10, 8],
+                [0, 8]
+            ]
+        },
+        "living_room": {
+            "name": "Living Room",
+            "floor": 1,
+            "polygon": [
+                [10, 0],
+                [25, 0],
+                [25, 15],
+                [10, 15]
+            ]
+        },
+        "kitchen_eating": {
+            "name": "Kitchen / Eating",
+            "floor": 1,
+            "polygon": [
+                [25, 5],
+                [35, 5],
+                [35, 15],
+                [25, 15]
+            ]
+        },
+        "hack_area": {
+            "name": "Hack Area",
+            "floor": 1,
+            "polygon": [
+                [35, 0],
+                [50, 0],
+                [50, 15],
+                [35, 15]
+            ]
+        },
+        "work_area": {
+            "name": "Work Area / Desks",
+            "floor": 1,
+            "polygon": [
+                [15, 15],
+                [35, 15],
+                [35, 30],
+                [15, 30]
+            ]
+        },
+        "server_it": {
+            "name": "Servers / IT Area",
+            "floor": 1,
+            "polygon": [
+                [0, 8],
+                [15, 8],
+                [15, 20],
+                [0, 20]
+            ]
+        }
     },
-    "conf_a": {
-      "name": "Conference Room A",
-      "floor": 1,
-      "polygon": [[10, 0], [20, 0], [20, 10], [10, 10]]
+    "adjacency": {
+        "entryway": ["living_room", "server_it"],
+        "living_room": ["entryway", "kitchen_eating", "server_it", "work_area"],
+        "kitchen_eating": ["living_room", "hack_area"],
+        "hack_area": ["kitchen_eating", "work_area"],
+        "work_area": ["living_room", "hack_area", "server_it"],
+        "server_it": ["entryway", "living_room", "work_area"]
     },
-    "conf_b": {
-      "name": "Conference Room B",
-      "floor": 1,
-      "polygon": [[0, 10], [10, 10], [10, 20], [0, 20]]
+    "cameras": [
+        { "id": 1, "zone": "living_room", "position": [12, 2] },
+        { "id": 2, "zone": "kitchen_eating", "position": [28, 6] },
+        { "id": 3, "zone": "hack_area", "position": [42, 3] },
+        { "id": 4, "zone": "hack_area", "position": [48, 14] },
+        { "id": 5, "zone": "work_area", "position": [17, 28] },
+        { "id": 6, "zone": "server_it", "position": [2, 12] }
+    ],
+    "sensors": {
+        "air_quality": [
+            { "id": 1, "zone": "living_room", "position": [18, 5] },
+            { "id": 2, "zone": "kitchen_eating", "position": [29, 10] },
+            { "id": 3, "zone": "hack_area", "position": [43, 8] },
+            { "id": 4, "zone": "hack_area", "position": [49, 12] },
+            { "id": 5, "zone": "work_area", "position": [25, 25] },
+            { "id": 6, "zone": "server_it", "position": [8, 15] }
+        ],
+        "motion": [
+            { "id": 1, "zone": "entryway", "position": [5, 2] },
+            { "id": 2, "zone": "living_room", "position": [22, 4] },
+            { "id": 3, "zone": "hack_area", "position": [44, 2] },
+            { "id": 4, "zone": "hack_area", "position": [49, 14] },
+            { "id": 5, "zone": "work_area", "position": [17, 28] },
+            { "id": 6, "zone": "server_it", "position": [2, 12] }
+        ]
     }
-  },
-  "adjacency": {
-    "lobby": ["conf_a", "conf_b"],
-    "conf_a": ["lobby"],
-    "conf_b": ["lobby"]
-  },
-  "cameras": [],
-  "sensors": {}
 }

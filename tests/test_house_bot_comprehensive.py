@@ -12,13 +12,17 @@ class TestHouseBotComprehensive:
     @patch("houseagent.house_bot.OpenAI")
     @patch("houseagent.house_bot.FloorPlanModel")
     def test_initialization_with_default_values(
-        self, mock_floor_plan, mock_openai, mock_file
+        self, mock_floor_plan, mock_openai, mock_file, monkeypatch
     ):
         """Test HouseBot initializes with default environment values"""
+        # Clear any env vars from .env file to test true defaults
+        monkeypatch.delenv("OPENAI_MODEL", raising=False)
+        monkeypatch.delenv("OPENAI_TEMPERATURE", raising=False)
+
         mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
 
-        assert bot.model == "gpt-3.5-turbo"
+        assert bot.model == "gpt-5"
         assert bot.temperature == 0.0
         assert bot.system_prompt_template == "sys"
         assert bot.human_prompt_template == "human"
@@ -30,14 +34,14 @@ class TestHouseBotComprehensive:
         self, mock_floor_plan, mock_openai, mock_file, monkeypatch
     ):
         """Test HouseBot respects custom environment variables"""
-        monkeypatch.setenv("OPENAI_MODEL", "gpt-4")
+        monkeypatch.setenv("OPENAI_MODEL", "gpt-5-pro")
         monkeypatch.setenv("OPENAI_TEMPERATURE", "0.7")
         monkeypatch.setenv("OPENAI_API_KEY", "custom-key")
 
         mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
 
-        assert bot.model == "gpt-4"
+        assert bot.model == "gpt-5-pro"
         assert bot.temperature == 0.7
 
     @patch("builtins.open", side_effect=FileNotFoundError("File not found"))
@@ -315,8 +319,8 @@ class TestHouseBotComprehensive:
         mock_client.chat.completions.create.return_value = mock_response
 
         bot = HouseBot()
-        bot.classifier_model = "gpt-3.5-turbo"
-        bot.synthesis_model = "gpt-4"
+        bot.classifier_model = "gpt-5-mini"
+        bot.synthesis_model = "gpt-5"
 
         # High severity situation
         high_severity_state = {
@@ -327,9 +331,9 @@ class TestHouseBotComprehensive:
 
         bot.generate_response(high_severity_state, None)
 
-        # Check that gpt-4 was used
+        # Check that gpt-5 was used
         call_kwargs = bot.client.chat.completions.create.call_args[1]
-        assert call_kwargs["model"] == "gpt-4"
+        assert call_kwargs["model"] == "gpt-5"
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
@@ -337,7 +341,7 @@ class TestHouseBotComprehensive:
     def test_house_bot_uses_cheap_model_for_low_severity(
         self, mock_floor_plan, mock_openai, mock_file
     ):
-        """Test HouseBot uses gpt-3.5 for routine situations"""
+        """Test HouseBot uses gpt-5-mini for routine situations"""
 
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -353,14 +357,14 @@ class TestHouseBotComprehensive:
         mock_client.chat.completions.create.return_value = mock_response
 
         bot = HouseBot()
-        bot.classifier_model = "gpt-3.5-turbo"
-        bot.synthesis_model = "gpt-4"
+        bot.classifier_model = "gpt-5-mini"
+        bot.synthesis_model = "gpt-5"
 
         # Low severity situation
         low_severity_state = {"confidence": 0.3, "zones": ["lobby"]}
 
         bot.generate_response(low_severity_state, None)
 
-        # Check that gpt-3.5 was used
+        # Check that gpt-5-mini was used
         call_kwargs = bot.client.chat.completions.create.call_args[1]
-        assert call_kwargs["model"] == "gpt-3.5-turbo"
+        assert call_kwargs["model"] == "gpt-5-mini"

@@ -8,6 +8,7 @@ services:
     volumes:
       - ./.env:/app/.env
       - ./prompts:/app/prompts
+      - ./config:/app/config
       - chroma-data:/app/chroma_data
   sensor-collector:
     build:

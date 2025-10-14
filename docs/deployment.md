@@ -11,7 +11,7 @@
 
 1. Copy example config:
 ```bash
-cp config/production.env.example .env
+cp .env.example .env
 ```
 
 2. Edit `.env` with your settings:

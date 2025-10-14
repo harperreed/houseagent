@@ -46,3 +46,43 @@ def test_legacy_to_sensor_conversion():
     assert msg.sensor_id == "temp_hall"
     assert msg.zone_id == "zone_hall"
     assert msg.value["reading"] == 21.0
+
+
+def test_home_assistant_format():
+    """Test LegacyMessage supports Home Assistant format"""
+    msg = LegacyMessage(
+        entity_id="binary_sensor.speaking_detected",
+        from_state="off",
+        to_state="on",
+        area="main_office",
+        timestamp="2025-10-14T14:49:00.989588-05:00",
+        attributes={"device_class": "occupancy", "friendly_name": "Speaking Detected"},
+    )
+    assert msg.entity_id == "binary_sensor.speaking_detected"
+    assert msg.area == "main_office"
+    assert msg.to_state == "on"
+
+
+def test_home_assistant_to_sensor_conversion():
+    """Test converting Home Assistant format to SensorMessage"""
+    ha_msg = {
+        "entity_id": "binary_sensor.speaking_detected",
+        "from_state": "off",
+        "to_state": "on",
+        "area": "main_office",
+        "timestamp": "2025-10-14T14:49:00.989588-05:00",
+        "attributes": {
+            "device_class": "occupancy",
+            "friendly_name": "Speaking Detected",
+        },
+    }
+    zone_map = {"main_office": "office_main"}
+
+    msg = SensorMessage.from_legacy(ha_msg, zone_map)
+    assert msg.sensor_id == "binary_sensor.speaking_detected"
+    assert msg.sensor_type == "speaking"
+    assert msg.zone_id == "office_main"
+    assert msg.ts == "2025-10-14T14:49:00.989588-05:00"
+    assert msg.value["state"] == "on"
+    assert msg.value["previous_state"] == "off"
+    assert msg.value["attributes"]["device_class"] == "occupancy"
