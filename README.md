@@ -52,6 +52,34 @@ HouseBot monitors the specified MQTT topic for house state updates. When an upda
 - MQTT client setup: Handles the connection, subscription, and publishing to the MQTT broker
 - Main loop: Runs the message processing and keeps the program running
 
+## Phase 0: Foundation (Current)
+
+The system now supports both legacy home automation messages and new hierarchical office sensor topics.
+
+### New Topic Structure
+
+Office sensors publish to: `office/{site}/{floor}/{zone}/{type}/{id}`
+
+Example: `office/hq/1/conf_room_a/temperature/temp_01`
+
+### Message Format
+
+New format (Pydantic validated):
+```json
+{
+  "ts": "2025-10-14T10:30:00Z",
+  "sensor_id": "temp_01",
+  "sensor_type": "temperature",
+  "zone_id": "conf_room_a",
+  "site_id": "hq",
+  "floor": 1,
+  "value": {"celsius": 22.5},
+  "quality": {"battery_pct": 95}
+}
+```
+
+Legacy format still supported (auto-converted).
+
 ## Customization
 
 You can modify the `system_prompt` in the `HouseBot` class to change the AI's behavior or provide additional context. You can also adjust the `timeout` variable in the `.env` file to change the interval between message batches.
