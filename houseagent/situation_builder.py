@@ -29,6 +29,7 @@ class Situation:
             "zones": self.features.get("zones", []),
             "event_counts": self.features.get("event_counts", {}),
             "confidence": self.confidence,
+            "anomaly_scores": self.features.get("anomaly_scores", []),
             "messages": self.messages,
         }
 
