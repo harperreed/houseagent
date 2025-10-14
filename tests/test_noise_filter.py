@@ -1,5 +1,5 @@
 # ABOUTME: Tests for noise filtering including deduplication and quality gates
-# ABOUTME: Validates time-of-day sensitivity and EWMA statistics
+# ABOUTME: Validates duplicate suppression and battery-based quality filtering
 
 from datetime import datetime
 from houseagent.noise_filter import NoiseFilter

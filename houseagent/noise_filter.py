@@ -1,5 +1,5 @@
 # ABOUTME: Noise filtering for sensor messages with deduplication and quality checks
-# ABOUTME: Implements EWMA statistics and time-of-day sensitivity rules
+# ABOUTME: Suppresses duplicate readings within time window and low battery sensors
 
 from datetime import datetime
 from houseagent.schemas import SensorMessage
