@@ -140,7 +140,10 @@ class TestMessageHistory:
 
     @patch("builtins.open", new_callable=MagicMock)
     @patch("houseagent.house_bot.OpenAI")
-    def test_house_bot_uses_message_history(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_house_bot_uses_message_history(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test HouseBot uses message history when provided"""
         mock_file.return_value.__enter__.return_value.read.side_effect = [
             "System: {default_state}",
@@ -182,7 +185,10 @@ class TestMessageHistory:
 
     @patch("builtins.open", new_callable=MagicMock)
     @patch("houseagent.house_bot.OpenAI")
-    def test_house_bot_fallback_without_history(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_house_bot_fallback_without_history(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test HouseBot falls back to old behavior without message history"""
         mock_file.return_value.__enter__.return_value.read.side_effect = [
             "System: {default_state}",

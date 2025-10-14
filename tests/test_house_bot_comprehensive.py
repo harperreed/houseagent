@@ -10,7 +10,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_initialization_with_default_values(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_initialization_with_default_values(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test HouseBot initializes with default environment values"""
         mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
@@ -22,8 +25,9 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
+    @patch("houseagent.house_bot.FloorPlanModel")
     def test_initialization_with_custom_env_values(
-        self, mock_openai, mock_file, monkeypatch
+        self, mock_floor_plan, mock_openai, mock_file, monkeypatch
     ):
         """Test HouseBot respects custom environment variables"""
         monkeypatch.setenv("OPENAI_MODEL", "gpt-4")
@@ -45,7 +49,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_strip_emojis_removes_all_emojis(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_strip_emojis_removes_all_emojis(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test emoji stripping with various emoji types"""
         mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
@@ -62,7 +69,8 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response_success(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response_success(self, mock_floor_plan, mock_openai, mock_file):
         """Test successful response generation"""
         mock_file.return_value.read.side_effect = [
             "System: {default_state}",
@@ -85,7 +93,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response_with_emojis(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response_with_emojis(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test response with emojis gets stripped"""
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -109,7 +120,8 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response_api_error(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response_api_error(self, mock_floor_plan, mock_openai, mock_file):
         """Test handling of OpenAI API errors"""
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -128,7 +140,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response_rate_limit(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response_rate_limit(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test handling of rate limit errors"""
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -149,7 +164,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response_with_none_values(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response_with_none_values(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test generate_response with None parameters"""
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -171,7 +189,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_prompt_formatting_with_special_characters(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_prompt_formatting_with_special_characters(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
         """Test prompt formatting handles special characters"""
         mock_file.return_value.read.side_effect = [
             "System: {default_state}",
@@ -196,7 +217,10 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_temperature_bounds(self, mock_openai, mock_file, monkeypatch):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_temperature_bounds(
+        self, mock_floor_plan, mock_openai, mock_file, monkeypatch
+    ):
         """Test temperature values at boundaries"""
         for temp in ["0", "0.5", "1.0", "2.0"]:
             monkeypatch.setenv("OPENAI_TEMPERATURE", temp)
@@ -206,7 +230,8 @@ class TestHouseBotComprehensive:
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_empty_response_from_api(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_empty_response_from_api(self, mock_floor_plan, mock_openai, mock_file):
         """Test handling of empty response from OpenAI"""
         mock_file.return_value.read.side_effect = [
             "sys {default_state}",
@@ -225,3 +250,45 @@ class TestHouseBotComprehensive:
         result = bot.generate_response('{"state": "data"}', '{"last": "data"}')
 
         assert result == ""
+
+    @patch("builtins.open", new_callable=mock_open, read_data="test")
+    @patch("houseagent.house_bot.OpenAI")
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_house_bot_executes_tools_before_ai(
+        self, mock_floor_plan, mock_openai, mock_file
+    ):
+        """Test HouseBot can execute tools and inject results into prompt"""
+        from unittest.mock import Mock
+
+        mock_file.return_value.read.side_effect = [
+            "sys {default_state}",
+            "human {current_state} {last_state}",
+            "{}",
+        ]
+
+        mock_client = MagicMock()
+        mock_openai.return_value = mock_client
+
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "Tool results received"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        bot = HouseBot()
+
+        # Mock tool router
+        bot.tool_router = Mock()
+        bot.tool_router.get_catalog.return_value = "floor_plan_query"
+        bot.tool_router.execute.return_value = {"zones": ["conf_a"]}
+
+        current_state = {
+            "zones": ["lobby"],
+            "tool_request": {
+                "tool_name": "floor_plan_query",
+                "params": {"query": "adjacent_zones", "zone_id": "lobby"},
+            },
+        }
+
+        bot.generate_response(current_state, None)
+
+        # Verify tool was executed
+        assert bot.tool_router.execute.called

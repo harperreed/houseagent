@@ -7,7 +7,8 @@ from houseagent.house_bot import HouseBot
 class TestHouseBot(unittest.TestCase):
     @patch("builtins.open", new_callable=mock_open, read_data="test content")
     @patch("houseagent.house_bot.OpenAI")
-    def setUp(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def setUp(self, mock_floor_plan, mock_openai, mock_file):
         # Mock the file reads for prompts
         mock_file.return_value.read.side_effect = [
             "System prompt: {default_state}",
@@ -18,7 +19,8 @@ class TestHouseBot(unittest.TestCase):
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_initialization(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_initialization(self, mock_floor_plan, mock_openai, mock_file):
         mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
         self.assertIsNotNone(bot.logger)
@@ -33,7 +35,8 @@ class TestHouseBot(unittest.TestCase):
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")
-    def test_generate_response(self, mock_openai, mock_file):
+    @patch("houseagent.house_bot.FloorPlanModel")
+    def test_generate_response(self, mock_floor_plan, mock_openai, mock_file):
         # Setup mocks
         mock_file.return_value.read.side_effect = [
             "System: {default_state}",
