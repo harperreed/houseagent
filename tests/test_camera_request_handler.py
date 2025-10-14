@@ -64,3 +64,49 @@ def test_camera_request_handler_invalid_camera():
 
     # Should not publish anything for invalid camera
     assert not mqtt_client.publish.called
+
+
+def test_camera_request_handler_invalid_json():
+    """Test handler gracefully handles malformed JSON payload"""
+    floor_plan = FloorPlanModel.load("config/floor_plan.json")
+    mqtt_client = Mock()
+    handler = CameraRequestHandler(floor_plan, mqtt_client)
+
+    # Invalid JSON payload
+    invalid_payload = "{'bad': json with missing quotes}"
+
+    handler.handle_request(invalid_payload)
+
+    # Should not crash and should not publish anything
+    assert not mqtt_client.publish.called
+
+
+def test_camera_request_handler_file_read_error():
+    """Test handler handles file read errors gracefully"""
+    floor_plan = FloorPlanModel.load("config/floor_plan.json")
+    mqtt_client = Mock()
+    handler = CameraRequestHandler(floor_plan, mqtt_client)
+
+    request_payload = json.dumps(
+        {
+            "camera_id": "front_entrance",
+            "zone": "entryway",
+            "timestamp": "2025-10-14T12:00:00Z",
+            "source": "dashboard",
+        }
+    )
+
+    with patch("houseagent.tools.camera_tool.CameraTool.execute") as mock_execute:
+        mock_execute.return_value = {
+            "success": True,
+            "camera_id": "front_entrance",
+            "zone": "entryway",
+            "analysis": "Two people entering",
+            "snapshot_path": "/tmp/nonexistent.jpg",
+        }
+
+        with patch("builtins.open", side_effect=FileNotFoundError("File not found")):
+            handler.handle_request(request_payload)
+
+    # Should not publish when file cannot be read
+    assert not mqtt_client.publish.called

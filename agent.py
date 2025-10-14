@@ -69,6 +69,11 @@ broker_address = os.getenv("MQTT_BROKER_ADDRESS", "localhost")
 port_number = int(os.getenv("MQTT_PORT", 1883))
 keep_alive_interval = int(os.getenv("MQTT_KEEP_ALIVE_INTERVAL", 60))
 
+# Initialize camera request handler before connecting to prevent race condition
+floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
+floor_plan = FloorPlanModel.load(floor_plan_path)
+camera_handler = CameraRequestHandler(floor_plan, client)
+
 logger.info(
     "mqtt.connecting",
     broker=broker_address,
@@ -77,11 +82,6 @@ logger.info(
 )
 client.connect(broker_address, port_number, keep_alive_interval)
 logger.info("mqtt.connect_initiated")
-
-# Initialize camera request handler
-floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
-floor_plan = FloorPlanModel.load(floor_plan_path)
-camera_handler = CameraRequestHandler(floor_plan, client)
 
 agent_client = AgentListener(client)
 
