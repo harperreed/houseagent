@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: pytest-check
         name: pytest
-        entry: uv run pytest
+        entry: bash -c 'uv pip install -e . --quiet && uv run pytest'
         language: system
         pass_filenames: false
         always_run: true

@@ -5,12 +5,12 @@ from houseagent.agent_listener import AgentListener
 
 
 class TestAgentListener(unittest.TestCase):
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def setUp(self, mock_house_bot):
         self.mock_client = MagicMock()
         self.agent_listener = AgentListener(self.mock_client)
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_initialization(self, mock_house_bot):
         agent_listener = AgentListener(self.mock_client)
         self.assertIsNotNone(agent_listener.logger)
@@ -35,7 +35,7 @@ class TestAgentListener(unittest.TestCase):
         mock_house_bot_instance.generate_response.assert_called_once()
         self.mock_client.publish.assert_called_once()
 
-    @patch('houseagent.agent_listener.HouseBot')
+    @patch("houseagent.agent_listener.HouseBot")
     def test_stop(self, mock_house_bot):
         agent_listener = AgentListener(self.mock_client)
         self.assertFalse(agent_listener.stopped)

@@ -5,21 +5,21 @@ from houseagent.house_bot import HouseBot
 
 
 class TestHouseBot(unittest.TestCase):
-    @patch('builtins.open', new_callable=mock_open, read_data='test content')
-    @patch('houseagent.house_bot.OpenAI')
+    @patch("builtins.open", new_callable=mock_open, read_data="test content")
+    @patch("houseagent.house_bot.OpenAI")
     def setUp(self, mock_openai, mock_file):
         # Mock the file reads for prompts
         mock_file.return_value.read.side_effect = [
-            'System prompt: {default_state}',
-            'Human prompt: {current_state} {last_state}',
-            '{"default": "state"}'
+            "System prompt: {default_state}",
+            "Human prompt: {current_state} {last_state}",
+            '{"default": "state"}',
         ]
         self.house_bot = HouseBot()
 
-    @patch('builtins.open', new_callable=mock_open, read_data='test')
-    @patch('houseagent.house_bot.OpenAI')
+    @patch("builtins.open", new_callable=mock_open, read_data="test")
+    @patch("houseagent.house_bot.OpenAI")
     def test_initialization(self, mock_openai, mock_file):
-        mock_file.return_value.read.side_effect = ['sys', 'human', '{}']
+        mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
         bot = HouseBot()
         self.assertIsNotNone(bot.logger)
         self.assertIsNotNone(bot.system_prompt_template)
@@ -31,14 +31,14 @@ class TestHouseBot(unittest.TestCase):
         stripped_text = self.house_bot.strip_emojis(text_with_emojis)
         self.assertEqual(stripped_text, "Hello  World !")
 
-    @patch('builtins.open', new_callable=mock_open, read_data='test')
-    @patch('houseagent.house_bot.OpenAI')
+    @patch("builtins.open", new_callable=mock_open, read_data="test")
+    @patch("houseagent.house_bot.OpenAI")
     def test_generate_response(self, mock_openai, mock_file):
         # Setup mocks
         mock_file.return_value.read.side_effect = [
-            'System: {default_state}',
-            'Human: {current_state} {last_state}',
-            '{"test": "data"}'
+            "System: {default_state}",
+            "Human: {current_state} {last_state}",
+            '{"test": "data"}',
         ]
 
         mock_client = MagicMock()
@@ -60,10 +60,10 @@ class TestHouseBot(unittest.TestCase):
 
         # Verify the call was made with correct structure
         call_args = mock_client.chat.completions.create.call_args
-        self.assertIn('messages', call_args[1])
-        self.assertEqual(len(call_args[1]['messages']), 2)
-        self.assertEqual(call_args[1]['messages'][0]['role'], 'system')
-        self.assertEqual(call_args[1]['messages'][1]['role'], 'user')
+        self.assertIn("messages", call_args[1])
+        self.assertEqual(len(call_args[1]["messages"]), 2)
+        self.assertEqual(call_args[1]["messages"][0]["role"], "system")
+        self.assertEqual(call_args[1]["messages"][1]["role"], "user")
 
 
 if __name__ == "__main__":

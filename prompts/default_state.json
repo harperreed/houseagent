@@ -1,40 +1,31 @@
 [
-  # doors
-  {"entity_id": "binary_sensor.back_door", "state":"off" }, # off means door is closed 
-  {"entity_id": "binary_sensor.front_door", "state":"off" }, # off means door is closed 
-  {"entity_id": "binary_sensor.foyer_door", "state":"off" }, # off means door is closed 
-  {"entity_id": "binary_sensor.mudroom_door", "state":"off" }, # off means door is closed 
-  {"entity_id": "binary_sensor.nanawall_door", "state":"off" }, # off means door is closed 
-  
-  #motion detectors
-  {"entity_id": "binary_sensor.frontyard_motion", "state":"off" }, # off means there is no motion 
-  {"entity_id": "binary_sensor.east_side_motion", "state":"off" }, # off means there is no motion 
-  {"entity_id": "binary_sensor.alley_east_motion", "state":"off" }, # off means there is no motion 
-  {"entity_id": "binary_sensor.foyer_motion", "state":"off" }, # off means there is no motion 
-  {"entity_id": "binary_sensor.mud_room_motion", "state":"off" }, # off means there is no motion 
-  {"entity_id": "binary_sensor.basement_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.kitchen_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.main_bathroom_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.guestbed_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.dining_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.main_closet_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.main_bed_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.office_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.nook_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.mudroom_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.main_toilet_os", "state":"off" }, # off means no motion detected
-  {"entity_id": "binary_sensor.laundry_os", "state":"off" }, # off means no motion detected
-
-  # locks
-  {"entity_id": "binary_sensor.back_door_lock", "state":"off" }, # off means door is locked 
-  {"entity_id": "binary_sensor.front_door_lock", "state":"off" }, # off means door is locked 
-  
-  #occupancy sensors
+  {"entity_id": "binary_sensor.back_door", "state":"off" },
+  {"entity_id": "binary_sensor.front_door", "state":"off" },
+  {"entity_id": "binary_sensor.foyer_door", "state":"off" },
+  {"entity_id": "binary_sensor.mudroom_door", "state":"off" },
+  {"entity_id": "binary_sensor.nanawall_door", "state":"off" },
+  {"entity_id": "binary_sensor.frontyard_motion", "state":"off" },
+  {"entity_id": "binary_sensor.east_side_motion", "state":"off" },
+  {"entity_id": "binary_sensor.alley_east_motion", "state":"off" },
+  {"entity_id": "binary_sensor.foyer_motion", "state":"off" },
+  {"entity_id": "binary_sensor.mud_room_motion", "state":"off" },
+  {"entity_id": "binary_sensor.basement_os", "state":"off" },
+  {"entity_id": "binary_sensor.kitchen_os", "state":"off" },
+  {"entity_id": "binary_sensor.main_bathroom_os", "state":"off" },
+  {"entity_id": "binary_sensor.guestbed_os", "state":"off" },
+  {"entity_id": "binary_sensor.dining_os", "state":"off" },
+  {"entity_id": "binary_sensor.main_closet_os", "state":"off" },
+  {"entity_id": "binary_sensor.main_bed_os", "state":"off" },
+  {"entity_id": "binary_sensor.office_os", "state":"off" },
+  {"entity_id": "binary_sensor.nook_os", "state":"off" },
+  {"entity_id": "binary_sensor.mudroom_os", "state":"off" },
+  {"entity_id": "binary_sensor.main_toilet_os", "state":"off" },
+  {"entity_id": "binary_sensor.laundry_os", "state":"off" },
+  {"entity_id": "binary_sensor.back_door_lock", "state":"off" },
+  {"entity_id": "binary_sensor.front_door_lock", "state":"off" },
   {"entity_id": "person.harper_reed", "state":"not_home" },
   {"entity_id": "person.hiromi_nakazawa", "state":"not_home" },
   {"entity_id": "person.katherine_valesquaz", "state":"not_home" },
-  
-  #other sensors
   {"entity_id": "switch.alley_east_detected_object", "state":"unknown" },
   {"entity_id": "switch.alley_wast_detected_object", "state":"unknown" },
   {"entity_id": "sensor.mud_room_detected_object", "state":"unknown" },
