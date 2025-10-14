@@ -49,6 +49,14 @@ Access at: http://localhost:5001
 - Raw MQTT message payloads
 - Debugging and monitoring
 
+**Camera Snapshots** (Purple)
+- Live camera feeds from all 7 office cameras
+- Auto-refreshes every 60 seconds
+- GPT-5 vision analysis for each snapshot
+- Manual "Capture Now" per camera
+- Global "Refresh All" button
+- Stale indicator if snapshot > 2 minutes old
+
 ## Configuration
 
 The dashboard automatically uses your `.env` configuration:
