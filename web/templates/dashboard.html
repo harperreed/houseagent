@@ -227,6 +227,12 @@
             const state = cameraStates.get(cameraId);
             if (!state) return;
 
+            // Validate image data to prevent XSS
+            if (!state.image || !state.image.startsWith('data:image/jpeg;base64,')) {
+                console.error('Invalid image data for camera:', cameraId);
+                return;
+            }
+
             let cameraDiv = document.getElementById(`camera-${cameraId}`);
             if (!cameraDiv) {
                 // Create new camera card
