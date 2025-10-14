@@ -12,11 +12,18 @@ logger = structlog.get_logger(__name__)
 
 
 def on_connect(client, userdata, flags, rc):
-    logger.info("Connected to MQTT broker")
-    topic = os.getenv("SUBSCRIBE_TOPIC", "your/input/topic/here")
-    client.subscribe(topic)
-    logger.debug(f"Subscribing to topic: {topic}")
-    logger.info(f"Connected with result code {rc}. Subscribed to topic: {topic}")
+    """Handle MQTT connection - subscribe to topics"""
+    logger.info("mqtt.connected", result_code=rc)
+
+    # Keep existing legacy subscription
+    legacy_topic = os.getenv("SUBSCRIBE_TOPIC", "hassevents/notifications")
+    client.subscribe(legacy_topic)
+    logger.info("mqtt.subscribed", topic=legacy_topic)
+
+    # Add hierarchical office topics
+    office_pattern = "office/+/+/+/+/+"  # site/floor/zone/type/id
+    client.subscribe(office_pattern)
+    logger.info("mqtt.subscribed", topic=office_pattern, type="office")
 
 
 def on_message(client, userdata, msg):
