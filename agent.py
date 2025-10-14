@@ -6,6 +6,8 @@ import time
 import structlog
 
 from houseagent.agent_listener import AgentListener
+from houseagent.handlers.camera_request_handler import CameraRequestHandler
+from houseagent.floor_plan import FloorPlanModel
 
 # Load configuration from .env file
 load_dotenv()
@@ -22,11 +24,19 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe(topic)
     logger.info(f"Connected. Subscribed to topic: {topic}")
 
+    # Subscribe camera request handler
+    camera_handler.subscribe()
+
 
 def on_message(client, userdata, msg):
     logger.info("Received message")
     logger.debug(f"Message: {msg.payload}")
-    agent_client.on_message(client, userdata, msg)
+
+    # Route camera request messages to camera handler
+    if msg.topic == CameraRequestHandler.CAMERA_REQUEST_TOPIC:
+        camera_handler.handle_request(msg.payload.decode("utf-8"))
+    else:
+        agent_client.on_message(client, userdata, msg)
 
 
 def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
@@ -67,6 +77,11 @@ logger.info(
 )
 client.connect(broker_address, port_number, keep_alive_interval)
 logger.info("mqtt.connect_initiated")
+
+# Initialize camera request handler
+floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
+floor_plan = FloorPlanModel.load(floor_plan_path)
+camera_handler = CameraRequestHandler(floor_plan, client)
 
 agent_client = AgentListener(client)
 
