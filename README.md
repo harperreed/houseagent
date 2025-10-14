@@ -80,6 +80,48 @@ New format (Pydantic validated):
 
 Legacy format still supported (auto-converted).
 
+## Complete System Architecture (All Phases)
+
+### Message Flow
+
+1. **MQTT Input** - Sensors publish to hierarchical topics
+2. **Validation** - Pydantic schemas validate message format
+3. **Noise Filtering** - Duplicates and low-quality readings suppressed
+4. **Anomaly Detection** - Z-score based outlier detection
+5. **Situation Building** - Messages clustered by spatial/temporal proximity
+6. **Tool Execution** - Floor plan queries, camera snapshots, state lookups
+7. **AI Synthesis** - Model selected by severity, tools inform response
+8. **Response** - Structured output with severity, tags, actions
+
+### Configuration
+
+See `config/production.env.example` for all configuration options.
+
+Key settings:
+- `OFFICE_MODE=true` - Enable office sensor processing
+- `ENABLE_TOOLS=true` - Enable tool execution
+- `ANOMALY_Z_THRESHOLD=2.5` - Z-score threshold for anomalies
+- `CLASSIFIER_MODEL=gpt-3.5-turbo` - Fast model for routine events
+- `OPENAI_MODEL=gpt-4` - Premium model for high-severity situations
+
+### Testing
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run specific phase tests
+uv run pytest tests/test_schemas.py           # Phase 0
+uv run pytest tests/test_noise_filter.py      # Phase 1
+uv run pytest tests/test_situation_builder.py # Phase 2
+uv run pytest tests/test_tool_router.py       # Phase 3-4
+uv run pytest tests/test_house_bot.py         # Phase 5
+```
+
+### Deployment
+
+See `docs/deployment.md` for Docker deployment instructions.
+
 ## Customization
 
 You can modify the `system_prompt` in the `HouseBot` class to change the AI's behavior or provide additional context. You can also adjust the `timeout` variable in the `.env` file to change the interval between message batches.
