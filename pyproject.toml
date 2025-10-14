@@ -10,6 +10,7 @@ dependencies = [
     "paho-mqtt>=2.1.0",
     "pydantic>=2.9.2",
     "python-dotenv>=1.0.1",
+    "python-ulid>=3.1.0",
     "structlog>=24.4.0",
 ]
 
