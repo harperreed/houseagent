@@ -4,6 +4,7 @@
 import os
 import json
 import time
+import uuid
 from datetime import datetime
 from collections import deque
 from threading import Lock
@@ -75,10 +76,13 @@ def classify_message_type(topic, payload):
         return "sensor"
 
 
-# Create MQTT client
-mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "dashboard")
+# Create MQTT client with unique ID to prevent broker conflicts
+client_id = f"dashboard-{uuid.uuid4().hex[:8]}"
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
+
+logger.info("Dashboard MQTT client initialized", client_id=client_id)
 
 # Set up authentication if needed
 mqtt_username = os.getenv("MQTT_USERNAME")
