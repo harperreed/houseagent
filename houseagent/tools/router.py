@@ -52,8 +52,15 @@ class ToolRouter:
             raise
 
     def get_catalog(self) -> str:
-        """Get catalog of available tools"""
-        return ", ".join(self.tools.keys())
+        """Get catalog of available tools with descriptions"""
+        catalog_parts = []
+        for tool_name, tool in self.tools.items():
+            if hasattr(tool, "get_description"):
+                description = tool.get_description()
+                catalog_parts.append(f"{tool_name}: {description}")
+            else:
+                catalog_parts.append(tool_name)
+        return "\n\n".join(catalog_parts)
 
     def __del__(self):
         """Cleanup executor on deletion"""

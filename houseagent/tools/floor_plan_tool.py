@@ -34,3 +34,16 @@ class FloorPlanTool:
 
         else:
             return {"error": "Unknown query type"}
+
+    def get_description(self) -> str:
+        """Tool description for AI"""
+        zones = list(self.floor_plan.zones.keys())
+        return f"""Query floor plan spatial information.
+
+        Available zones: {", ".join(zones)}
+
+        Usage:
+        - floor_plan_query(query="adjacent_zones", zone_id="hack_area") - get zones adjacent to specified zone
+        - floor_plan_query(query="zone_info", zone_id="hack_area") - get full zone information including sensors
+
+        Returns zone data from floor plan configuration."""
