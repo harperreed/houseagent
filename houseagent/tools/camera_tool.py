@@ -22,6 +22,23 @@ class CameraTool:
         api_key = os.getenv("OPENAI_API_KEY")
         self.openai_client = OpenAI(api_key=api_key) if api_key else None
 
+        # Load vision prompt
+        prompt_path = os.getenv("CAMERA_VISION_PROMPT", "prompts/camera_vision.txt")
+        try:
+            with open(prompt_path) as f:
+                self.vision_prompt_template = f.read()
+        except FileNotFoundError:
+            self.logger.warning(f"Camera vision prompt not found: {prompt_path}")
+            self.vision_prompt_template = """You are analyzing a security camera snapshot from {camera_name} in the {zone_name} area.
+
+Describe what you see in 1-2 concise sentences. Focus on:
+- People: How many, what they're doing
+- Activity: Normal office work vs unusual behavior
+- Objects: Anything out of place or noteworthy
+- Safety concerns: Any hazards or security issues
+
+Be direct and specific. Skip pleasantries."""
+
         # Check if cameras have RTSP URLs configured
         if not self.floor_plan.cameras or not any(
             c.get("rtsp") for c in self.floor_plan.cameras
@@ -140,15 +157,9 @@ class CameraTool:
             zone_name = camera.get("zone", "unknown")
             camera_name = camera.get("name", camera["id"])
 
-            prompt = f"""You are analyzing a security camera snapshot from {camera_name} in the {zone_name} area.
-
-Describe what you see in 1-2 concise sentences. Focus on:
-- People: How many, what they're doing
-- Activity: Normal office work vs unusual behavior
-- Objects: Anything out of place or noteworthy
-- Safety concerns: Any hazards or security issues
-
-Be direct and specific. Skip pleasantries."""
+            prompt = self.vision_prompt_template.format(
+                camera_name=camera_name, zone_name=zone_name
+            )
 
             # Call GPT-5 vision using Responses API
             response = self.openai_client.responses.create(

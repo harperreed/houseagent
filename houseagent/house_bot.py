@@ -47,6 +47,64 @@ class HouseBot:
         self.tool_router.tools["floor_plan_query"] = FloorPlanTool(self.floor_plan)
         self.tool_router.tools["get_camera_snapshot"] = CameraTool(self.floor_plan)
 
+        # Load should_respond filter prompt
+        filter_prompt_path = os.getenv(
+            "SHOULD_RESPOND_PROMPT", "prompts/should_respond_filter.txt"
+        )
+        try:
+            with open(filter_prompt_path) as f:
+                self.should_respond_prompt = f.read()
+        except FileNotFoundError:
+            self.logger.warning(
+                f"Should respond filter prompt not found: {filter_prompt_path}"
+            )
+            self.should_respond_prompt = None
+
+    def should_respond(self, situation_json: str) -> bool:
+        """
+        Ask GPT-5-mini whether the assistant should respond to this situation.
+
+        Uses JSON structured output to get a yes/no decision with reasoning.
+        Returns True if assistant should speak up, False otherwise.
+        """
+        # If no filter prompt loaded, always respond (fail open)
+        if not self.should_respond_prompt:
+            self.logger.warning("No filter prompt, defaulting to respond=True")
+            return True
+
+        try:
+            # Build filter messages
+            messages = [
+                {"role": "system", "content": self.should_respond_prompt},
+                {"role": "user", "content": f"Situation data:\n{situation_json}"},
+            ]
+
+            # Call GPT-5-mini with JSON mode
+            response = self.client.chat.completions.create(
+                model=self.classifier_model,
+                messages=messages,
+                response_format={"type": "json_object"},
+            )
+
+            # Parse JSON response
+            result_json = json.loads(response.choices[0].message.content)
+            should_respond = result_json.get("should_respond", True)
+            reason = result_json.get("reason", "No reason provided")
+
+            self.logger.info(
+                "Response filter decision",
+                should_respond=should_respond,
+                reason=reason,
+            )
+
+            return should_respond
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to run should_respond filter, defaulting to True", error=str(e)
+            )
+            return True
+
     def strip_emojis(self, text):
         RE_EMOJI = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
         return RE_EMOJI.sub(r"", text)

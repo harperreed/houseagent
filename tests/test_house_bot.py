@@ -9,11 +9,13 @@ class TestHouseBot(unittest.TestCase):
     @patch("houseagent.house_bot.OpenAI")
     @patch("houseagent.house_bot.FloorPlanModel")
     def setUp(self, mock_floor_plan, mock_openai, mock_file):
-        # Mock the file reads for prompts
+        # Mock the file reads for prompts (system, human, default_state, should_respond, camera_vision)
         mock_file.return_value.read.side_effect = [
             "System prompt: {default_state}",
             "Human prompt: {current_state} {last_state}",
             '{"default": "state"}',
+            "Should respond filter prompt",
+            "Camera vision prompt: {camera_name} {zone_name}",
         ]
         self.house_bot = HouseBot()
 
@@ -21,7 +23,13 @@ class TestHouseBot(unittest.TestCase):
     @patch("houseagent.house_bot.OpenAI")
     @patch("houseagent.house_bot.FloorPlanModel")
     def test_initialization(self, mock_floor_plan, mock_openai, mock_file):
-        mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
+        mock_file.return_value.read.side_effect = [
+            "sys",
+            "human",
+            "{}",
+            "should_respond",
+            "camera_vision",
+        ]
         bot = HouseBot()
         self.assertIsNotNone(bot.logger)
         self.assertIsNotNone(bot.system_prompt_template)
@@ -42,6 +50,8 @@ class TestHouseBot(unittest.TestCase):
             "System: {default_state}",
             "Human: {current_state} {last_state}",
             '{"test": "data"}',
+            "Should respond filter prompt",
+            "Camera vision prompt: {camera_name} {zone_name}",
         ]
 
         mock_client = MagicMock()

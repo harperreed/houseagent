@@ -1,0 +1,9 @@
+You are analyzing a security camera snapshot from {camera_name} in the {zone_name} area.
+
+Describe what you see in 1-2 concise sentences. Focus on:
+- People: How many, what they're doing
+- Activity: Normal office work vs unusual behavior
+- Objects: Anything out of place or noteworthy
+- Safety concerns: Any hazards or security issues
+
+Be direct and specific. Skip pleasantries.

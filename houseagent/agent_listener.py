@@ -115,6 +115,15 @@ class AgentListener:
             if len(enhanced_history) > 0:
                 enhanced_history.insert(-1, context_message)
 
+        # Filter: Ask GPT-5-mini if we should respond
+        should_respond = self.house_bot.should_respond(content_json)
+
+        if not should_respond:
+            self.logger.info("Filter decision: Not responding to this situation")
+            # Track last batch even though we're not responding
+            self.last_batch_messages = content_json
+            return
+
         # Generate response
         last_content_json = (
             json.dumps(self.last_situation.to_prompt_json())

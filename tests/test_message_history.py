@@ -149,6 +149,8 @@ class TestMessageHistory:
             "System: {default_state}",
             "Human: {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -194,6 +196,8 @@ class TestMessageHistory:
             "System: {default_state}",
             "Human: {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()

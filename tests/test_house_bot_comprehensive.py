@@ -19,7 +19,13 @@ class TestHouseBotComprehensive:
         monkeypatch.delenv("OPENAI_MODEL", raising=False)
         monkeypatch.delenv("OPENAI_TEMPERATURE", raising=False)
 
-        mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
+        mock_file.return_value.read.side_effect = [
+            "sys",
+            "human",
+            "{}",
+            "should_respond",
+            "camera_vision",
+        ]
         bot = HouseBot()
 
         assert bot.model == "gpt-5"
@@ -38,7 +44,13 @@ class TestHouseBotComprehensive:
         monkeypatch.setenv("OPENAI_TEMPERATURE", "0.7")
         monkeypatch.setenv("OPENAI_API_KEY", "custom-key")
 
-        mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
+        mock_file.return_value.read.side_effect = [
+            "sys",
+            "human",
+            "{}",
+            "should_respond",
+            "camera_vision",
+        ]
         bot = HouseBot()
 
         assert bot.model == "gpt-5-pro"
@@ -58,7 +70,13 @@ class TestHouseBotComprehensive:
         self, mock_floor_plan, mock_openai, mock_file
     ):
         """Test emoji stripping with various emoji types"""
-        mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
+        mock_file.return_value.read.side_effect = [
+            "sys",
+            "human",
+            "{}",
+            "should_respond",
+            "camera_vision",
+        ]
         bot = HouseBot()
 
         test_cases = [
@@ -80,6 +98,8 @@ class TestHouseBotComprehensive:
             "System: {default_state}",
             "Human: {current_state} {last_state}",
             '{"test": "data"}',
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -106,6 +126,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -131,6 +153,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -153,6 +177,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -177,6 +203,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -202,6 +230,8 @@ class TestHouseBotComprehensive:
             "System: {default_state}",
             "Human: {current_state} {last_state}",
             '{"special": "chars\\"test\\n"}',
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -228,7 +258,13 @@ class TestHouseBotComprehensive:
         """Test temperature values at boundaries"""
         for temp in ["0", "0.5", "1.0", "2.0"]:
             monkeypatch.setenv("OPENAI_TEMPERATURE", temp)
-            mock_file.return_value.read.side_effect = ["sys", "human", "{}"]
+            mock_file.return_value.read.side_effect = [
+                "sys",
+                "human",
+                "{}",
+                "should_respond",
+                "camera_vision",
+            ]
             bot = HouseBot()
             assert bot.temperature == float(temp)
 
@@ -241,6 +277,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -268,6 +306,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -309,6 +349,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
@@ -347,6 +389,8 @@ class TestHouseBotComprehensive:
             "sys {default_state}",
             "human {current_state} {last_state}",
             "{}",
+            "should_respond",
+            "camera_vision",
         ]
 
         mock_client = MagicMock()
