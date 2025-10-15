@@ -30,6 +30,7 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application code
 COPY web_dashboard.py ./
 COPY web/ ./web/
+COPY config/ ./config/
 
 # Expose web port
 EXPOSE 5001
