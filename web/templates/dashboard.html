@@ -201,7 +201,11 @@
             .then(r => r.json())
             .then(messages => {
                 messages.reverse().forEach(msg => {
-                    addMessage(msg);
+                    if (msg.type === 'camera') {
+                        updateCameraSnapshot(msg);
+                    } else {
+                        addMessage(msg);
+                    }
                     addToAllEvents(msg);
                 });
             })
@@ -209,7 +213,8 @@
 
         // Camera panel functions
         function updateCameraSnapshot(data) {
-            const cameraId = data.payload.entity_id.replace('camera.', '');
+            const entityId = data.payload.entity_id || '';
+            const cameraId = entityId.startsWith('camera.') ? entityId.substring(7) : entityId;
             const attrs = data.payload.attributes;
 
             cameraStates.set(cameraId, {
@@ -256,7 +261,7 @@
                 <div class="camera-analysis">${escapeHtml(state.analysis)}</div>
                 <div class="camera-footer">
                     <span class="camera-timestamp" data-timestamp="${state.timestamp}">${ageSeconds}s ago</span>
-                    <button class="capture-btn" data-camera-id="${cameraId}" data-zone="${escapeHtml(state.zone)}">
+                    <button class="capture-btn" data-camera-id="${escapeHtml(cameraId)}" data-zone="${escapeHtml(state.zone)}">
                         Capture Now
                     </button>
                 </div>

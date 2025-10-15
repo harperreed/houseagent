@@ -98,9 +98,23 @@ mqtt_client.loop_start()
 
 # Load floor plan for camera configuration
 floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
-with open(floor_plan_path) as f:
-    floor_plan_data = json.load(f)
-    app.config["CAMERAS"] = floor_plan_data.get("cameras", [])
+try:
+    with open(floor_plan_path) as f:
+        floor_plan_data = json.load(f)
+        app.config["CAMERAS"] = floor_plan_data.get("cameras", [])
+    logger.info("Floor plan loaded", camera_count=len(app.config["CAMERAS"]))
+except FileNotFoundError:
+    logger.warning(
+        "Floor plan not found, camera features disabled", path=floor_plan_path
+    )
+    app.config["CAMERAS"] = []
+except json.JSONDecodeError as e:
+    logger.error(
+        "Floor plan JSON invalid, camera features disabled",
+        path=floor_plan_path,
+        error=str(e),
+    )
+    app.config["CAMERAS"] = []
 
 
 @app.route("/")
