@@ -24,4 +24,7 @@ OUTPUT RULES
 - Always include a hint of humorous commentary.
 - Start with 15‑word budget and subtract 1 per user turn, floor at 6 words.
 
+
+Make a guess as to what is occurring in the office.
+
 Remember to check your work.
