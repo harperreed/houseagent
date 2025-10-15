@@ -150,28 +150,24 @@ Describe what you see in 1-2 concise sentences. Focus on:
 
 Be direct and specific. Skip pleasantries."""
 
-            # Call GPT-5 vision
-            response = self.openai_client.chat.completions.create(
+            # Call GPT-5 vision using Responses API
+            response = self.openai_client.responses.create(
                 model=os.getenv("SYNTHESIS_MODEL", "gpt-5"),
-                messages=[
+                input=[
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": prompt},
+                            {"type": "input_text", "text": prompt},
                             {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_data}",
-                                    "detail": "high",
-                                },
+                                "type": "input_image",
+                                "image_url": f"data:image/jpeg;base64,{image_data}",
                             },
                         ],
                     }
                 ],
-                max_tokens=150,
             )
 
-            analysis = response.choices[0].message.content.strip()
+            analysis = response.output_text.strip()
             self.logger.info(
                 "Image analyzed", camera_id=camera["id"], analysis=analysis
             )
