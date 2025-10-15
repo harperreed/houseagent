@@ -66,6 +66,9 @@ The dashboard automatically uses your `.env` configuration:
 - `SUBSCRIBE_TOPIC` - Legacy sensor topic
 - `NOTIFICATION_TOPIC` - AI response topic
 - `MESSAGE_BUNDLE_TOPIC` - Situation bundles topic
+- `FLOOR_PLAN_PATH` - Floor plan JSON for camera configuration
+
+**MQTT Client ID:** Each dashboard instance uses a unique UUID-based client ID (`dashboard-{8-char-hex}`) to prevent broker connection conflicts when running multiple instances.
 
 ## Theme
 
