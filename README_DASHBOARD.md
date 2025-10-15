@@ -50,12 +50,13 @@ Access at: http://localhost:5001
 - Debugging and monitoring
 
 **Camera Snapshots** (Purple)
-- Live camera feeds from all 7 office cameras
-- Auto-refreshes every 60 seconds
+- Camera feeds from all 7 office cameras
+- Manual refresh only (use "Refresh All" button)
 - GPT-5 vision analysis for each snapshot
-- Manual "Capture Now" per camera
+- Per-camera "Capture Now" button
 - Global "Refresh All" button
 - Stale indicator if snapshot > 2 minutes old
+- **Note:** Auto-refresh disabled to avoid excessive API costs
 
 ## Configuration
 

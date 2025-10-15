@@ -294,19 +294,8 @@
 
         setInterval(updateCameraTimestamps, 10000);
 
-        // Load initial camera states on page load
-        fetch('/api/camera/refresh_all', { method: 'POST' })
-            .then(r => r.json())
-            .then(data => console.log('Initial camera load:', data.requested, 'cameras'))
-            .catch(err => console.error('Initial camera load failed:', err));
-
-        // Auto-refresh all cameras every 60 seconds
-        setInterval(() => {
-            fetch('/api/camera/refresh_all', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => console.log('Auto-refresh:', data.requested, 'cameras'))
-                .catch(err => console.error('Auto-refresh failed:', err));
-        }, 60000);
+        // NOTE: Auto-refresh disabled to avoid constant API calls
+        // Use manual "Refresh All" button to trigger camera captures
 
         // Manual refresh all button
         document.getElementById('refresh-all-btn').addEventListener('click', () => {
