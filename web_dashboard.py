@@ -200,4 +200,5 @@ def status():
 
 if __name__ == "__main__":
     port = int(os.getenv("DASHBOARD_PORT", "5001"))
-    app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
+    debug = os.getenv("FLASK_ENV") != "production"
+    app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)
