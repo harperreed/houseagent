@@ -8,6 +8,8 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        args: ['--maxkb=1000', '--enforce-all']
+        exclude: '^docs/.*\.(png|jpg|jpeg)$'
       - id: check-json
       - id: check-toml
       - id: check-merge-conflict

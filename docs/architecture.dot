@@ -1,0 +1,319 @@
+digraph HouseAgent {
+    // Graph settings
+    rankdir=TB;
+    compound=true;
+    newrank=true;
+    splines=polyline;
+    nodesep=0.8;
+    ranksep=1.2;
+
+    // Global node defaults
+    node [fontname="Helvetica", fontsize=11, margin=0.2];
+    edge [fontname="Helvetica", fontsize=9];
+
+    // Color scheme
+    graph [style=filled, color="#1a1a1a", fontcolor=white];
+
+    // ============================================================================
+    // EXTERNAL SYSTEMS LAYER
+    // ============================================================================
+    subgraph cluster_external {
+        label="External Systems";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        mqtt_broker [label="MQTT Broker\n(Mosquitto)", shape=cylinder, style=filled, fillcolor="#4a4a4a", fontcolor=white];
+        office_sensors [label="Office Sensors\noffice/{site}/{floor}/{zone}/{type}/{id}", shape=box3d, style=filled, fillcolor="#1e90ff", fontcolor=white];
+        hass_sensors [label="Home Assistant\nLegacy Sensors", shape=box3d, style=filled, fillcolor="#1e90ff", fontcolor=white];
+        cameras [label="RTSP Cameras\n(7 cameras)", shape=box3d, style=filled, fillcolor="#ff1493", fontcolor=white];
+
+        openai_gpt5_mini [label="OpenAI API\nGPT-5-mini\n(Classifier)", shape=component, style=filled, fillcolor="#ff6b6b", fontcolor=white];
+        openai_gpt5 [label="OpenAI API\nGPT-5\n(Synthesis)", shape=component, style=filled, fillcolor="#ff0000", fontcolor=white];
+        openai_vision [label="OpenAI API\nGPT-5 Vision\n(Camera Analysis)", shape=component, style=filled, fillcolor="#ff1493", fontcolor=white];
+    }
+
+    // ============================================================================
+    // DATA INGESTION LAYER
+    // ============================================================================
+    subgraph cluster_ingestion {
+        label="Data Ingestion Layer";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        collector [label="Collector\ncollector.py\n• Dual topic subscription\n• Legacy + hierarchical", shape=rect, style=filled, fillcolor="#3cb371", fontcolor=white];
+    }
+
+    // ============================================================================
+    // PROCESSING PIPELINE LAYER
+    // ============================================================================
+    subgraph cluster_processing {
+        label="Processing Pipeline";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        // Validation
+        subgraph cluster_validation {
+            label="Validation";
+            style=filled;
+            color="#3d3d3d";
+            fontcolor=cyan;
+
+            schemas [label="Pydantic Schemas\nschemas.py\n• SensorMessage\n• LegacyMessage\n• Auto-conversion", shape=rect, style=filled, fillcolor="#4169e1", fontcolor=white];
+        }
+
+        // Message Batcher
+        message_batcher [label="MessageBatcher\nmessage_batcher.py\n• Time-based batching\n• Validation pipeline\n• Filter coordination", shape=rect, style=filled, fillcolor="#ff8c00", fontcolor=white];
+
+        // Filtering
+        subgraph cluster_filtering {
+            label="Filtering & Detection";
+            style=filled;
+            color="#3d3d3d";
+            fontcolor=cyan;
+
+            noise_filter [label="NoiseFilter\nnoise_filter.py\n• Deduplication\n• Quality gates\n• Time-of-day sensitivity", shape=rect, style=filled, fillcolor="#ffd700", fontcolor=black];
+
+            anomaly_detector [label="AnomalyDetector\nanomaly_detector.py\n• Z-score detection\n• EWMA statistics\n• Outlier scoring", shape=rect, style=filled, fillcolor="#ff6347", fontcolor=white];
+        }
+    }
+
+    // ============================================================================
+    // INTELLIGENCE LAYER
+    // ============================================================================
+    subgraph cluster_intelligence {
+        label="Intelligence Layer";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        agent_listener [label="AgentListener\nagent_listener.py\n• Situation orchestration\n• History management\n• Semantic context", shape=rect, style=filled, fillcolor="#9370db", fontcolor=white];
+
+        // Situation Building
+        subgraph cluster_situation {
+            label="Situation Building";
+            style=filled;
+            color="#3d3d3d";
+            fontcolor=cyan;
+
+            situation_builder [label="SituationBuilder\nsituation_builder.py\n• Zone clustering\n• Multi-sensor corroboration\n• Confidence scoring\n• ULID generation", shape=rect, style=filled, fillcolor="#20b2aa", fontcolor=white];
+        }
+
+        // Response Filter
+        should_respond_filter [label="Should Respond Filter\nHouseBot.should_respond()\n• GPT-5-mini decision gate\n• JSON structured output\n• Spam prevention", shape=diamond, style=filled, fillcolor="#ff69b4", fontcolor=white];
+
+        // AI Core
+        house_bot [label="HouseBot\nhouse_bot.py\n• Multi-model selection\n• Tool orchestration\n• Prompt injection\n• Emoji stripping", shape=rect, style=filled, fillcolor="#8b008b", fontcolor=white];
+    }
+
+    // ============================================================================
+    // TOOL FRAMEWORK LAYER
+    // ============================================================================
+    subgraph cluster_tools {
+        label="Tool Framework";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        tool_router [label="ToolRouter\ntools/router.py\n• Tool registry\n• Timeout handling\n• Error recovery\n• get_catalog()", shape=rect, style=filled, fillcolor="#da70d6", fontcolor=white];
+
+        floor_plan_tool [label="FloorPlanTool\ntools/floor_plan_tool.py\n• adjacent_zones query\n• zone_info query", shape=rect, style=filled, fillcolor="#9370db", fontcolor=white];
+
+        camera_tool [label="CameraTool\ntools/camera_tool.py\n• RTSP snapshot capture\n• GPT-5 Vision analysis\n• Zone/camera lookup", shape=rect, style=filled, fillcolor="#ff1493", fontcolor=white];
+    }
+
+    // ============================================================================
+    // KNOWLEDGE LAYER
+    // ============================================================================
+    subgraph cluster_knowledge {
+        label="Knowledge & State";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        floor_plan [label="FloorPlanModel\nfloor_plan.py\n• Zone definitions\n• Adjacency graph\n• Camera FOV mappings", shape=folder, style=filled, fillcolor="#daa520", fontcolor=black];
+
+        semantic_memory [label="SemanticMemory\nsemantic_memory.py\n• Embedding storage\n• ChromaDB integration\n• Temporal windowing\n• Spatial metadata", shape=cylinder, style=filled, fillcolor="#4682b4", fontcolor=white];
+
+        chromadb [label="ChromaDB\nVector Store", shape=cylinder, style=filled, fillcolor="#1e90ff", fontcolor=white];
+    }
+
+    // ============================================================================
+    // CONFIGURATION LAYER
+    // ============================================================================
+    subgraph cluster_config {
+        label="Configuration";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        prompts [label="Prompts Directory\n• housebot_system.txt\n• housebot_human.txt\n• should_respond_filter.txt\n• camera_vision.txt", shape=folder, style=filled, fillcolor="#708090", fontcolor=white];
+
+        floor_plan_json [label="floor_plan.json\n• Zone polygons\n• Sensor placement\n• Camera FOVs\n• Adjacency rules", shape=note, style=filled, fillcolor="#a9a9a9", fontcolor=white];
+
+        env_config [label=".env Configuration\n• MQTT settings\n• OpenAI models\n• Feature flags\n• Thresholds", shape=note, style=filled, fillcolor="#696969", fontcolor=white];
+    }
+
+    // ============================================================================
+    // WEB DASHBOARD LAYER
+    // ============================================================================
+    subgraph cluster_dashboard {
+        label="Web Dashboard";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        web_dashboard [label="Flask Dashboard\nweb_dashboard.py\n• Server-Sent Events (SSE)\n• Real-time message streaming\n• Camera panel\n• Port 5001", shape=rect, style=filled, fillcolor="#00ced1", fontcolor=white];
+
+        dashboard_ui [label="Dashboard UI\ntemplates/dashboard.html\n• GlaDOS Responses (Magenta)\n• Situations (Cyan)\n• Sensors (Yellow)\n• Cameras (Purple)\n• All Events (Green)", shape=rect, style=filled, fillcolor="#00fa9a", fontcolor=black];
+
+        camera_handler [label="CameraRequestHandler\nhandlers/camera_request_handler.py\n• Manual camera triggers\n• Vision analysis\n• MQTT publishing", shape=rect, style=filled, fillcolor="#ff1493", fontcolor=white];
+    }
+
+    // ============================================================================
+    // OUTPUT LAYER
+    // ============================================================================
+    subgraph cluster_output {
+        label="Output Layer";
+        style=filled;
+        color="#2d2d2d";
+        fontcolor="#00ff00";
+        fontsize=14;
+
+        notification_topic [label="MQTT Topic\nNOTIFICATION_TOPIC\n(AI responses)", shape=parallelogram, style=filled, fillcolor="#00ff00", fontcolor=black];
+
+        bundle_topic [label="MQTT Topic\nMESSAGE_BUNDLE_TOPIC\n(Situation bundles)", shape=parallelogram, style=filled, fillcolor="#00ffff", fontcolor=black];
+
+        camera_topic [label="MQTT Topic\noffice/.../camera/{id}\n(Camera snapshots)", shape=parallelogram, style=filled, fillcolor="#ff1493", fontcolor=white];
+    }
+
+    // ============================================================================
+    // DATA FLOW EDGES - INGESTION
+    // ============================================================================
+    office_sensors -> mqtt_broker [label="publish", color="#1e90ff"];
+    hass_sensors -> mqtt_broker [label="publish", color="#1e90ff"];
+    mqtt_broker -> collector [label="subscribe\noffice/+/+/+/+/+\nhassevents/notifications", color="#00ff00", penwidth=2];
+
+    // ============================================================================
+    // DATA FLOW EDGES - PROCESSING PIPELINE
+    // ============================================================================
+    collector -> message_batcher [label="raw messages", color="#3cb371", penwidth=2];
+    message_batcher -> schemas [label="validate", color="#4169e1"];
+    schemas -> message_batcher [label="SensorMessage", color="#4169e1", style=dashed];
+    message_batcher -> noise_filter [label="check", color="#ffd700"];
+    noise_filter -> message_batcher [label="keep/suppress", color="#ffd700", style=dashed];
+    message_batcher -> anomaly_detector [label="analyze", color="#ff6347"];
+    anomaly_detector -> message_batcher [label="anomaly_score", color="#ff6347", style=dashed];
+
+    // ============================================================================
+    // DATA FLOW EDGES - INTELLIGENCE LAYER
+    // ============================================================================
+    message_batcher -> agent_listener [label="validated batch", color="#ff8c00", penwidth=2];
+    agent_listener -> situation_builder [label="build situation", color="#20b2aa"];
+    situation_builder -> floor_plan [label="zone lookup", color="#daa520"];
+    floor_plan -> situation_builder [label="adjacency", color="#daa520", style=dashed];
+    situation_builder -> agent_listener [label="Situation object\n(confidence, zones)", color="#20b2aa", style=dashed];
+
+    agent_listener -> semantic_memory [label="search context", color="#4682b4"];
+    semantic_memory -> chromadb [label="vector search", color="#1e90ff"];
+    chromadb -> semantic_memory [label="similar situations", color="#1e90ff", style=dashed];
+    semantic_memory -> agent_listener [label="relevant history", color="#4682b4", style=dashed];
+
+    agent_listener -> should_respond_filter [label="situation_json", color="#9370db", penwidth=2];
+    should_respond_filter -> openai_gpt5_mini [label="filter decision", color="#ff69b4"];
+    openai_gpt5_mini -> should_respond_filter [label="JSON: {should_respond, reason}", color="#ff69b4", style=dashed];
+
+    should_respond_filter -> house_bot [label="YES: proceed", color="#00ff00", penwidth=2];
+    should_respond_filter -> agent_listener [label="NO: skip response", color="#ff0000", style=dotted];
+
+    // ============================================================================
+    // DATA FLOW EDGES - TOOL FRAMEWORK
+    // ============================================================================
+    house_bot -> tool_router [label="tool request", color="#8b008b"];
+    tool_router -> floor_plan_tool [label="execute", color="#da70d6"];
+    tool_router -> camera_tool [label="execute", color="#da70d6"];
+
+    floor_plan_tool -> floor_plan [label="query zones", color="#9370db"];
+    floor_plan -> floor_plan_tool [label="zone data", color="#9370db", style=dashed];
+
+    camera_tool -> cameras [label="RTSP capture", color="#ff1493"];
+    cameras -> camera_tool [label="JPEG snapshot", color="#ff1493", style=dashed];
+    camera_tool -> openai_vision [label="analyze snapshot", color="#ff1493"];
+    openai_vision -> camera_tool [label="analysis text", color="#ff1493", style=dashed];
+
+    tool_router -> house_bot [label="tool results", color="#da70d6", style=dashed];
+
+    // ============================================================================
+    // DATA FLOW EDGES - AI GENERATION
+    // ============================================================================
+    house_bot -> openai_gpt5_mini [label="severity < 0.7\nclassify", color="#ff6b6b"];
+    house_bot -> openai_gpt5 [label="severity > 0.7\nsynthesize", color="#ff0000"];
+    openai_gpt5_mini -> house_bot [label="routine response", color="#ff6b6b", style=dashed];
+    openai_gpt5 -> house_bot [label="witty response\n+ structured JSON", color="#ff0000", style=dashed];
+
+    // ============================================================================
+    // DATA FLOW EDGES - CONFIGURATION
+    // ============================================================================
+    prompts -> house_bot [label="load prompts", color="#708090", style=dotted];
+    prompts -> camera_tool [label="vision prompt", color="#708090", style=dotted];
+    floor_plan_json -> floor_plan [label="load config", color="#a9a9a9", style=dotted];
+    env_config -> collector [label="MQTT config", color="#696969", style=dotted];
+    env_config -> house_bot [label="model selection", color="#696969", style=dotted];
+
+    // ============================================================================
+    // DATA FLOW EDGES - OUTPUT
+    // ============================================================================
+    house_bot -> agent_listener [label="AI response", color="#8b008b", style=dashed];
+    agent_listener -> notification_topic [label="publish response", color="#00ff00", penwidth=2];
+    message_batcher -> bundle_topic [label="publish batch", color="#00ffff", penwidth=1];
+
+    // ============================================================================
+    // DATA FLOW EDGES - WEB DASHBOARD
+    // ============================================================================
+    mqtt_broker -> web_dashboard [label="subscribe\nall topics", color="#00ced1"];
+    web_dashboard -> dashboard_ui [label="SSE stream", color="#00fa9a", penwidth=2];
+    dashboard_ui -> camera_handler [label="manual capture", color="#ff1493"];
+    camera_handler -> camera_tool [label="trigger snapshot", color="#ff1493"];
+    camera_tool -> camera_topic [label="publish analysis", color="#ff1493"];
+    camera_topic -> mqtt_broker [label="publish", color="#ff1493"];
+    mqtt_broker -> web_dashboard [label="camera updates", color="#ff1493"];
+
+    // ============================================================================
+    // MEMORY EDGES
+    // ============================================================================
+    agent_listener -> semantic_memory [label="store message", color="#9370db", style=dashed];
+    house_bot -> semantic_memory [label="store response", color="#8b008b", style=dashed];
+
+    // ============================================================================
+    // LEGEND
+    // ============================================================================
+    subgraph cluster_legend {
+        label="Legend";
+        style=filled;
+        color="#1a1a1a";
+        fontcolor="#00ff00";
+        fontsize=12;
+        rank=sink;
+
+        legend_data [label="Data Flow", shape=plaintext, fontcolor=white];
+        legend_config [label="Configuration", shape=plaintext, fontcolor=white];
+        legend_sync [label="Synchronous Call", shape=plaintext, fontcolor=white];
+        legend_async [label="Asynchronous/Response", shape=plaintext, fontcolor=white];
+        legend_skip [label="Conditional Skip", shape=plaintext, fontcolor=white];
+
+        legend_data -> legend_config [style=invis];
+        legend_config -> legend_sync [style=invis];
+        legend_sync -> legend_async [style=invis];
+        legend_async -> legend_skip [style=invis];
+    }
+}
