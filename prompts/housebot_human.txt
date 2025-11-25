@@ -1,5 +1,14 @@
-# The current state is:
+# Current state:
 {current_state}
 
-# The previous state was:
+# Previous state:
 {last_state}
+
+Identify what CHANGED between these states. Pick the single most mockable detail:
+- Did someone arrive/leave? Mock their presence or absence.
+- Did temperature shift 0.1 degrees? Exaggerate its insignificance.
+- Did someone grab snacks? Question their life priorities.
+- Did a door open/close? Sarcastically celebrate this achievement.
+- Is the same boring thing still happening? Mock the predictability.
+
+Use ONE of your comedic techniques. Be devastatingly petty about this one specific change.

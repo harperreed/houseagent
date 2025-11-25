@@ -28,11 +28,9 @@ class HouseBot:
             self.default_state = f.read()
 
         openai_model = os.getenv("OPENAI_MODEL", "gpt-5")
-        openai_temperature = float(os.getenv("OPENAI_TEMPERATURE", "0"))
 
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = openai_model
-        self.temperature = openai_temperature
 
         # Multi-model configuration (GPT-5 models)
         self.classifier_model = os.getenv("CLASSIFIER_MODEL", "gpt-5-mini")
@@ -213,7 +211,7 @@ class HouseBot:
                 }
             )
 
-        # Use selected model
+        # Use selected model (GPT-5 only supports temperature=1, which is the default)
         response = self.client.chat.completions.create(
             model=selected_model,
             messages=messages,
