@@ -17,7 +17,6 @@ class TestHouseBotComprehensive:
         """Test HouseBot initializes with default environment values"""
         # Clear any env vars from .env file to test true defaults
         monkeypatch.delenv("OPENAI_MODEL", raising=False)
-        monkeypatch.delenv("OPENAI_TEMPERATURE", raising=False)
 
         mock_file.return_value.read.side_effect = [
             "sys",
@@ -29,7 +28,7 @@ class TestHouseBotComprehensive:
         bot = HouseBot()
 
         assert bot.model == "gpt-5"
-        assert bot.temperature == 0.0
+        # Note: temperature removed - GPT-5 only supports temperature=1 (default)
         assert bot.system_prompt_template == "sys"
         assert bot.human_prompt_template == "human"
 
@@ -41,7 +40,6 @@ class TestHouseBotComprehensive:
     ):
         """Test HouseBot respects custom environment variables"""
         monkeypatch.setenv("OPENAI_MODEL", "gpt-5-pro")
-        monkeypatch.setenv("OPENAI_TEMPERATURE", "0.7")
         monkeypatch.setenv("OPENAI_API_KEY", "custom-key")
 
         mock_file.return_value.read.side_effect = [
@@ -54,7 +52,7 @@ class TestHouseBotComprehensive:
         bot = HouseBot()
 
         assert bot.model == "gpt-5-pro"
-        assert bot.temperature == 0.7
+        # Note: temperature removed - GPT-5 only supports temperature=1 (default)
 
     @patch("builtins.open", side_effect=FileNotFoundError("File not found"))
     @patch("houseagent.house_bot.OpenAI")
@@ -249,24 +247,8 @@ class TestHouseBotComprehensive:
         assert "messages" in call_args[1]
         assert len(call_args[1]["messages"]) == 2
 
-    @patch("builtins.open", new_callable=mock_open, read_data="test")
-    @patch("houseagent.house_bot.OpenAI")
-    @patch("houseagent.house_bot.FloorPlanModel")
-    def test_temperature_bounds(
-        self, mock_floor_plan, mock_openai, mock_file, monkeypatch
-    ):
-        """Test temperature values at boundaries"""
-        for temp in ["0", "0.5", "1.0", "2.0"]:
-            monkeypatch.setenv("OPENAI_TEMPERATURE", temp)
-            mock_file.return_value.read.side_effect = [
-                "sys",
-                "human",
-                "{}",
-                "should_respond",
-                "camera_vision",
-            ]
-            bot = HouseBot()
-            assert bot.temperature == float(temp)
+    # test_temperature_bounds removed - GPT-5 only supports temperature=1 (default)
+    # Temperature is no longer configurable as GPT-5 reasoning models don't support custom values
 
     @patch("builtins.open", new_callable=mock_open, read_data="test")
     @patch("houseagent.house_bot.OpenAI")

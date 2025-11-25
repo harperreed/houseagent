@@ -1,8 +1,12 @@
 import json
+import os
 import pytest
 import sys
 from pathlib import Path
 from unittest.mock import patch
+
+# Set TESTING env var before importing web_dashboard to prevent MQTT connection at import time
+os.environ["TESTING"] = "1"
 
 # Add project root to path to import web_dashboard
 sys.path.insert(0, str(Path(__file__).parent.parent))

@@ -90,11 +90,12 @@ mqtt_password = os.getenv("MQTT_PASSWORD")
 if mqtt_username and mqtt_password:
     mqtt_client.username_pw_set(mqtt_username, mqtt_password)
 
-# Connect to broker
-broker = os.getenv("MQTT_BROKER_ADDRESS", "localhost")
-port = int(os.getenv("MQTT_PORT", 1883))
-mqtt_client.connect(broker, port, 60)
-mqtt_client.loop_start()
+# Connect to broker (skip in test mode to avoid connection errors during test collection)
+if not os.getenv("TESTING"):
+    broker = os.getenv("MQTT_BROKER_ADDRESS", "localhost")
+    port = int(os.getenv("MQTT_PORT", 1883))
+    mqtt_client.connect(broker, port, 60)
+    mqtt_client.loop_start()
 
 # Load floor plan for camera configuration
 floor_plan_path = os.getenv("FLOOR_PLAN_PATH", "config/floor_plan.json")
@@ -217,7 +218,7 @@ def status():
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("DASHBOARD_PORT", "5001"))
+    port = int(os.getenv("DASHBOARD_PORT", "18675"))
     is_production = os.getenv("FLASK_ENV") == "production"
     app.run(
         host="0.0.0.0",
