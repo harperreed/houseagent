@@ -32,8 +32,8 @@ COPY web_dashboard.py ./
 COPY web/ ./web/
 COPY config/ ./config/
 
-# Expose web port
-EXPOSE 5001
+# Expose web port (Jenny's number!)
+EXPOSE 18675
 
 # Run dashboard with gunicorn (production WSGI server)
-CMD ["uv", "run", "gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--threads", "2", "--timeout", "120", "web_dashboard:app"]
+CMD ["uv", "run", "gunicorn", "--bind", "0.0.0.0:18675", "--workers", "1", "--threads", "2", "--timeout", "120", "web_dashboard:app"]
